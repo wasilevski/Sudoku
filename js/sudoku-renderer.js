@@ -17,6 +17,8 @@ class SudokuRenderer {
     this.highlightedCells = new Set();
     this.conflictCells = new Set();
     this.conflicts = [];
+    this.bombs = 0;
+    this.maxBombs = 3; // Game over at 3 bombs
     
     this.setupCanvas();
   }
@@ -252,5 +254,21 @@ class SudokuRenderer {
     setTimeout(() => {
       this.render();
     }, 300);
+  }
+
+  // Add getter method
+  getBombs() {
+    return this.bombs;
+  }
+
+  // Add method to increment bombs
+  addBomb() {
+    this.bombs++;
+    return this.bombs >= this.maxBombs; // Return true if game over
+  }
+
+  // Add method to reset bombs
+  resetBombs() {
+    this.bombs = 0;
   }
 }

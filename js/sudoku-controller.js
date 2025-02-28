@@ -19,6 +19,7 @@ class SudokuController {
       this.setupEventListeners();
       this.startTimer();
       this.updateMoveCounter();
+      this.updateBombCounter();
     }
     
     /**
@@ -138,19 +139,33 @@ class SudokuController {
       const { row, col } = this.renderer.selectedCell;
       
       if (this.isNoteMode && value !== 0) {
-        // Toggle note
+        // Toggle note (no bombs for notes)
         if (this.game.toggleNote(row, col, value)) {
           this.updateMoveCounter();
           this.renderer.render();
         }
       } else {
-        // Place number (now allows invalid moves)
+        // Store the current state to check for new conflicts
+        const previousConflicts = this.game.findConflicts().length;
+        
+        // Place number
         if (this.game.makeMove(row, col, value)) {
           this.updateMoveCounter();
           
           // Find conflicts after making the move
           const conflicts = this.game.findConflicts();
           this.renderer.conflicts = conflicts;
+          
+          // Check if this move created new conflicts
+          if (conflicts.length > previousConflicts) {
+            // Add a bomb
+            const gameOver = this.game.addBomb();
+            this.updateBombCounter();
+            
+            if (gameOver) {
+              this.handleLoss();
+            }
+          }
           
           this.renderer.render();
           
@@ -235,9 +250,12 @@ class SudokuController {
      */
     newGame() {
       this.game.generatePuzzle();
+      this.game.resetBombs();
       this.renderer.selectedCell = null;
+      this.renderer.conflicts = [];
       this.resetTimer();
       this.updateMoveCounter();
+      this.updateBombCounter();
       this.renderer.render();
     }
     
@@ -308,6 +326,28 @@ class SudokuController {
       // Show win message
       setTimeout(() => {
         alert(`Congratulations! You solved the puzzle in ${timeString} with ${moves} moves!`);
+      }, 300);
+    }
+    
+    /**
+     * Update the bomb counter display
+     */
+    updateBombCounter() {
+      document.getElementById('bomb-counter').textContent = `${this.game.getBombs()} 💣`;
+    }
+    
+    /**
+     * Handle loss condition
+     */
+    handleLoss() {
+      // Stop the timer
+      this.pauseTimer();
+      
+      // Show loss message
+      setTimeout(() => {
+        alert('BOOOOOM! Game Over! You collected 3 bombs! 💣💣💣');
+        // Optionally restart the game
+        this.newGame();
       }, 300);
     }
   }

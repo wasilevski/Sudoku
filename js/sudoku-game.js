@@ -15,6 +15,8 @@ class SudokuGame {
       this.moveHistory = [];
       this.redoStack = [];
       this.moveCount = 0;
+      this.bombs = 0;
+      this.maxBombs = 3; // Game over at 3 bombs
       this.generatePuzzle();
     }
     
@@ -666,5 +668,21 @@ class SudokuGame {
      */
     getMoveCount() {
       return this.moveCount;
+    }
+    
+    // Add getter method
+    getBombs() {
+      return this.bombs;
+    }
+
+    // Add method to increment bombs
+    addBomb() {
+      this.bombs++;
+      return this.bombs >= this.maxBombs; // Return true if game over
+    }
+
+    // Add method to reset bombs
+    resetBombs() {
+      this.bombs = 0;
     }
   }

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku Game</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <div class="game-container">
+    <header>
+      <h1>Sudoku</h1>
+      <div class="game-info">
+        <div class="timer-container">
+          <span class="info-label">Time:</span>
+          <span id="timer">00:00</span>
+        </div>
+        <div class="moves-container">
+          <span class="info-label">Moves:</span>
+          <span id="move-counter">0</span>
+        </div>
+      </div>
+    </header>
+    
+    <div class="board-container">
+      <canvas id="sudoku-board" width="450" height="450"></canvas>
+    </div>
+    
+    <div class="controls">
+      <div class="number-pad">
+        <button class="number-button" data-value="1">1</button>
+        <button class="number-button" data-value="2">2</button>
+        <button class="number-button" data-value="3">3</button>
+        <button class="number-button" data-value="4">4</button>
+        <button class="number-button" data-value="5">5</button>
+        <button class="number-button" data-value="6">6</button>
+        <button class="number-button" data-value="7">7</button>
+        <button class="number-button" data-value="8">8</button>
+        <button class="number-button" data-value="9">9</button>
+        <button class="number-button" data-value="0">Clear</button>
+      </div>
+      
+      <div class="action-buttons">
+        <button id="note-toggle" class="toggle-button">Notes</button>
+        <button id="undo-button">Undo</button>
+        <button id="redo-button">Redo</button>
+        <button id="hint-button">Hint</button>
+        <button id="new-game">New Game</button>
+      </div>
+    </div>
+    
+    <div class="theme-selector">
+      <label for="theme-select">Theme:</label>
+      <select id="theme-select">
+        <option value="default">Default</option>
+        <!-- More themes will be added later -->
+      </select>
+    </div>
+  </div>
+  
+  <script src="js/theme.js"></script>
+  <script src="js/sudoku-game.js"></script>
+  <script src="js/sudoku-renderer.js"></script>
+  <script src="js/sudoku-controller.js"></script>
+  <script>
+    // Initialize the game after all scripts have loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const game = new SudokuGame('medium');
+      const renderer = new SudokuRenderer('sudoku-board', game);
+      const controller = new SudokuController(game, renderer);
+      
+      // Initial render
+      renderer.render();
+    });
+  </script>
+</body>
+</html>

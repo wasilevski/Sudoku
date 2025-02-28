@@ -1,0 +1,207 @@
+/* Base styles */
+:root {
+    /* Default theme colors */
+    --color-background: #f5f5f5;
+    --color-surface: #ffffff;
+    --color-primary: #3498db;
+    --color-primary-dark: #2980b9;
+    --color-accent: #4caf50;
+    --color-text: #333333;
+    --color-text-light: #666666;
+    --color-border: #dddddd;
+    --color-grid: #000000;
+    --color-grid-minor: #aaaaaa;
+    --color-text-initial: #000000;
+    --color-text-user: #0000aa;
+    --color-notes: #666666;
+    --color-highlight: rgba(173, 216, 230, 0.5);
+    --color-conflict: rgba(255, 0, 0, 0.3);
+    --color-button: #f0f0f0;
+    --color-button-text: #333333;
+    --color-button-active: #4caf50;
+    --color-button-active-text: #ffffff;
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    
+    /* Font sizes */
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+    
+    /* Border radius */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: var(--color-text);
+    background-color: var(--color-background);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: var(--spacing-md);
+  }
+  
+  .game-container {
+    max-width: 500px;
+    width: 100%;
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: var(--spacing-lg);
+  }
+  
+  header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  h1 {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary-dark);
+  }
+  
+  .game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-lg);
+  }
+  
+  .info-label {
+    font-weight: bold;
+    margin-right: var(--spacing-xs);
+  }
+  
+  .board-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  canvas {
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .number-pad {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--spacing-sm);
+  }
+  
+  .number-button {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-lg);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-button);
+    color: var(--color-button-text);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .number-button:hover {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  .number-button[data-value="0"] {
+    grid-column: span 5;
+  }
+  
+  .action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+  }
+  
+  .action-buttons button {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-button);
+    color: var(--color-button-text);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .action-buttons button:hover {
+    background-color: var(--color-primary);
+    color: white;
+  }
+  
+  .toggle-button.active {
+    background-color: var(--color-button-active);
+    color: var(--color-button-active-text);
+  }
+  
+  #new-game {
+    grid-column: span 2;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+  }
+  
+  #new-game:hover {
+    background-color: var(--color-primary-dark);
+  }
+  
+  .theme-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+  }
+  
+  #theme-select {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 500px) {
+    .number-pad {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .number-button[data-value="0"] {
+      grid-column: span 3;
+    }
+    
+    .action-buttons {
+      grid-template-columns: 1fr;
+    }
+    
+    #new-game {
+      grid-column: span 1;
+    }
+  }

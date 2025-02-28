@@ -162,16 +162,33 @@ class SudokuController {
             const gameOver = this.game.addBomb();
             this.updateBombCounter();
             
-            if (gameOver) {
-              this.handleLoss();
+            // Temporarily show the conflict
+            this.renderer.render();
+            
+            // After 500ms, clear the conflicting entry and re-render
+            setTimeout(() => {
+              // Clear the conflicting number
+              this.game.makeMove(row, col, 0);
+              
+              // Clear the conflict from renderer
+              this.renderer.conflicts = this.game.findConflicts();
+              
+              // Re-render
+              this.renderer.render();
+              
+              // Check for game over
+              if (gameOver) {
+                this.handleLoss();
+              }
+            }, 500);
+          } else {
+            // No new conflicts, just render normally
+            this.renderer.render();
+            
+            // Check win condition
+            if (this.game.checkWinCondition()) {
+              this.handleWin();
             }
-          }
-          
-          this.renderer.render();
-          
-          // Check win condition
-          if (this.game.checkWinCondition()) {
-            this.handleWin();
           }
         }
       }

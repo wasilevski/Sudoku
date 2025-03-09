@@ -6,6 +6,7 @@
   <title>Sudoku Game</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="game-container">
@@ -16,10 +17,6 @@
           <span class="info-label">Time:</span>
           <span id="timer">00:00</span>
         </div>
-        <div>
-            <span class="info-label">Bombs:</span>
-            <span id="bomb-counter">0 💣</span>
-        </div>
         <div class="moves-container">
           <span class="info-label">Moves:</span>
           <span id="move-counter">0</span>
@@ -28,38 +25,26 @@
     </header>
     
     <div class="board-container">
-      <canvas id="sudoku-board" width="450" height="450"></canvas>
+      <div id="sudoku-board-container"></div>
     </div>
     
     <div class="controls">
-      <div class="number-pad">
-        <button class="number-button" data-value="1">1</button>
-        <button class="number-button" data-value="2">2</button>
-        <button class="number-button" data-value="3">3</button>
-        <button class="number-button" data-value="4">4</button>
-        <button class="number-button" data-value="5">5</button>
-        <button class="number-button" data-value="6">6</button>
-        <button class="number-button" data-value="7">7</button>
-        <button class="number-button" data-value="8">8</button>
-        <button class="number-button" data-value="9">9</button>
-        <button class="number-button" data-value="0">Clear</button>
+      <div class="input-numbers">
+        <button class="number-btn" data-number="1">1</button>
+        <button class="number-btn" data-number="2">2</button>
+        <button class="number-btn" data-number="3">3</button>
+        <button class="number-btn" data-number="4">4</button>
+        <button class="number-btn" data-number="5">5</button>
+        <button class="number-btn" data-number="6">6</button>
+        <button class="number-btn" data-number="7">7</button>
+        <button class="number-btn" data-number="8">8</button>
+        <button class="number-btn" data-number="9">9</button>
       </div>
-      
-      <div class="action-buttons">
-        <button id="note-toggle" class="toggle-button">Notes</button>
-        <button id="undo-button">Undo</button>
-        <button id="redo-button">Redo</button>
-        <button id="hint-button">Hint</button>
-        <button id="new-game">New Game</button>
+      <div class="control-buttons">
+        <button id="notes-btn">Notes</button>
+        <button id="hint-btn">Hint</button>
+        <button id="undo-btn">Undo</button>
       </div>
-    </div>
-    
-    <div class="theme-selector">
-      <label for="theme-select">Theme:</label>
-      <select id="theme-select">
-        <option value="default">Default</option>
-        <!-- More themes will be added later -->
-      </select>
     </div>
   </div>
 
@@ -67,17 +52,20 @@
   
   <script src="js/theme.js"></script>
   <script src="js/sudoku-game.js"></script>
-  <script src="js/sudoku-renderer.js"></script>
+  <script src="js/sudoku-rive-controller.js"></script>
   <script src="js/sudoku-controller.js"></script>
+  <script src="https://unpkg.com/@rive-app/canvas@1.0.98"></script>
   <script>
     // Initialize the game after all scripts have loaded
     document.addEventListener('DOMContentLoaded', () => {
       const game = new SudokuGame('medium');
-      const renderer = new SudokuRenderer('sudoku-board', game);
-      const controller = new SudokuController(game, renderer);
       
-      // Initial render
-      renderer.render();
+      // Create Rive controller
+      const riveContainer = document.getElementById('sudoku-board-container');
+      const riveController = new SudokuRiveController(riveContainer, game);
+      
+      // Create game controller with Rive
+      const controller = new SudokuController(game, riveController);
     });
   </script>
 </body>

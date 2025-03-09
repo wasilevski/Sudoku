@@ -38,16 +38,20 @@
     --border-radius-sm: 4px;
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
-  }
-  
-  * {
+    
+    /* Standardize sizes for both mobile and desktop */
+    --container-width: 375px;
+    --board-size: 349px;
+}
+
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-  }
-  
-  body {
-    font-family: 'Arial', sans-serif;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--color-text);
     background-color: var(--color-background);
@@ -56,65 +60,111 @@
     align-items: center;
     min-height: 100vh;
     padding: var(--spacing-md);
-  }
-  
-  .game-container {
-    max-width: 500px;
+}
+
+.game-container {
     width: 100%;
+    max-width: var(--container-width);
+    min-height: 812px;
     background-color: var(--color-surface);
-    border-radius: var(--border-radius-lg);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    padding: var(--spacing-lg);
-  }
-  
-  header {
+    padding: var(--spacing-md);
+    margin: 0 auto;
+}
+
+header {
     text-align: center;
     margin-bottom: var(--spacing-lg);
-  }
-  
-  h1 {
+}
+
+h1 {
     margin-bottom: var(--spacing-md);
     color: var(--color-primary-dark);
-  }
-  
-  .game-info {
+}
+
+.game-info {
     display: flex;
     justify-content: space-between;
     margin-bottom: var(--spacing-md);
     font-size: var(--font-size-lg);
-  }
-  
-  .info-label {
+}
+
+.info-label {
     font-weight: bold;
     margin-right: var(--spacing-xs);
-  }
-  
-  .board-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  canvas {
+}
+
+.board-container {
+    width: var(--board-size);
+    height: var(--board-size);
+    margin: 0 auto;
+}
+
+canvas {
     max-width: 100%;
     height: auto;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .controls {
+}
+
+.controls {
+    width: var(--board-size);
+    margin: 20px auto;
+}
+
+.input-numbers {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  .number-pad {
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.input-numbers button {
+    flex: 1;
+    padding: 10px 0;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.input-numbers button:hover {
+    background-color: #f0f0f0;
+}
+
+.control-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.control-buttons button {
+    flex: 1;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.control-buttons button:hover {
+    background-color: #f0f0f0;
+}
+
+.control-buttons button.active {
+    background-color: #4783FF;
+    color: white;
+    border-color: #4783FF;
+}
+
+.number-pad {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: var(--spacing-sm);
-  }
-  
-  .number-button {
+}
+
+.number-button {
     padding: var(--spacing-md);
     font-size: var(--font-size-lg);
     border: 1px solid var(--color-border);
@@ -123,24 +173,24 @@
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: background-color 0.2s;
-  }
-  
-  .number-button:hover {
+}
+
+.number-button:hover {
     background-color: var(--color-primary);
     color: white;
-  }
-  
-  .number-button[data-value="0"] {
+}
+
+.number-button[data-value="0"] {
     grid-column: span 5;
-  }
-  
-  .action-buttons {
+}
+
+.action-buttons {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-sm);
-  }
-  
-  .action-buttons button {
+}
+
+.action-buttons button {
     padding: var(--spacing-md);
     font-size: var(--font-size-md);
     border: 1px solid var(--color-border);
@@ -149,59 +199,62 @@
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: background-color 0.2s;
-  }
-  
-  .action-buttons button:hover {
+}
+
+.action-buttons button:hover {
     background-color: var(--color-primary);
     color: white;
-  }
-  
-  .toggle-button.active {
+}
+
+.toggle-button.active {
     background-color: var(--color-button-active);
     color: var(--color-button-active-text);
-  }
-  
-  #new-game {
+}
+
+#new-game {
     grid-column: span 2;
     background-color: var(--color-primary);
     color: white;
     border: none;
-  }
-  
-  #new-game:hover {
+}
+
+#new-game:hover {
     background-color: var(--color-primary-dark);
-  }
-  
-  .theme-selector {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-  }
-  
-  #theme-select {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface);
-    color: var(--color-text);
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 500px) {
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
     .number-pad {
-      grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
     
     .number-button[data-value="0"] {
-      grid-column: span 3;
+        grid-column: span 3;
     }
     
     .action-buttons {
-      grid-template-columns: 1fr;
+        grid-template-columns: 1fr;
     }
     
     #new-game {
-      grid-column: span 1;
+        grid-column: span 1;
     }
-  }
+    
+    .controls {
+        width: 100%;
+        padding: 0 10px;
+    }
+}
+
+/* Add this to your CSS */
+#sudoku-board-container {
+    width: var(--board-size);
+    height: var(--board-size);
+    margin: 0 auto;
+}
+
+#sudoku-board-container canvas {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+}

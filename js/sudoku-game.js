@@ -108,58 +108,49 @@ class SudokuGame {
     }
     
     /**
-     * Make a move in the puzzle
+     * Make a move
      * @param {number} row - Row index (0-8)
      * @param {number} col - Column index (0-8)
-     * @param {number} value - Value to place (0-9, 0 clears the cell)
-     * @returns {boolean} True if the move was successful
+     * @param {number} value - The number to place (0-9, 0 clears the cell)
+     * @returns {boolean} Whether the move was successful
      */
     makeMove(row, col, value) {
-      // Don't allow modifying initial cells
+      // Check if the cell is part of the initial grid
       if (this.initialGrid[row][col] !== 0) {
+        console.log(`Cannot modify initial cell at ${row},${col}`);
         return false;
       }
       
-      // If value is 0, we're clearing the cell
-      if (value === 0) {
-        // Save for undo functionality
-        this.moveHistory.push(new Move(
-          row, col, 
-          this.grid[row][col], 
-          0, 
-          this.notes[row][col]
-        ));
-        
-        // Clear the cell and notes
-        this.grid[row][col] = 0;
-        this.notes[row][col].clear();
-        
-        // Clear redo stack when a new move is made
+      // Check if the value is valid
+      if (value < 0 || value > 9) {
+        console.log(`Invalid value: ${value}`);
+        return false;
+      }
+      
+      // Save the current state for undo (if the method exists)
+      if (typeof this.saveState === 'function') {
+        this.saveState();
+      } else {
+        console.warn('saveState method not available - undo functionality disabled');
+      }
+      
+      // Clear the redo stack (if it exists)
+      if (this.redoStack) {
         this.redoStack = [];
-        this.moveCount++;
-        return true;
       }
       
-      // Allow any number between 1-9 regardless of validity
-      if (value < 1 || value > 9) {
-        return false;
-      }
-      
-      // Save for undo functionality
-      this.moveHistory.push(new Move(
-        row, col, 
-        this.grid[row][col], 
-        value, 
-        this.notes[row][col]
-      ));
-      
-      // Place the number
+      // Update the grid
       this.grid[row][col] = value;
-      this.notes[row][col].clear(); // Clear notes when placing a number
       
-      // Clear redo stack when a new move is made
-      this.redoStack = [];
+      // Clear notes for this cell
+      if (value !== 0) {
+        this.notes[row][col].clear();
+      }
+      
+      // Increment move counter
       this.moveCount++;
+      
+      console.log(`Move made: ${value} at ${row},${col}`);
       return true;
     }
     
@@ -209,48 +200,86 @@ class SudokuGame {
     }
     
     /**
+     * Save the current game state for undo
+     */
+    saveState() {
+      // Create deep copies of the grid and notes
+      const gridCopy = this.grid.map(row => [...row]);
+      const notesCopy = this.notes.map(row => 
+        row.map(cell => new Set([...cell]))
+      );
+      
+      // Save the state
+      this.moveHistory.push({
+        grid: gridCopy,
+        notes: notesCopy,
+        moveCount: this.moveCount
+      });
+      
+      console.log('Game state saved for undo');
+    }
+    
+    /**
      * Undo the last move
-     * @returns {boolean} True if a move was undone
+     * @returns {boolean} Whether the undo was successful
      */
     undo() {
       if (this.moveHistory.length === 0) {
+        console.log('No moves to undo');
         return false;
       }
       
-      const move = this.moveHistory.pop();
-      this.redoStack.push(new Move(
-        move.row, move.col,
-        this.grid[move.row][move.col],
-        move.oldValue,
-        this.notes[move.row][move.col]
-      ));
+      // Save current state for redo
+      const gridCopy = this.grid.map(row => [...row]);
+      const notesCopy = this.notes.map(row => 
+        row.map(cell => new Set([...cell]))
+      );
       
-      this.grid[move.row][move.col] = move.oldValue;
-      this.notes[move.row][move.col] = new Set(move.oldNotes);
+      this.redoStack.push({
+        grid: gridCopy,
+        notes: notesCopy,
+        moveCount: this.moveCount
+      });
       
+      // Restore previous state
+      const previousState = this.moveHistory.pop();
+      this.grid = previousState.grid;
+      this.notes = previousState.notes;
+      this.moveCount = previousState.moveCount;
+      
+      console.log('Undo performed');
       return true;
     }
     
     /**
-     * Redo the last undone move
-     * @returns {boolean} True if a move was redone
+     * Redo a previously undone move
+     * @returns {boolean} Whether the redo was successful
      */
     redo() {
       if (this.redoStack.length === 0) {
+        console.log('No moves to redo');
         return false;
       }
       
-      const move = this.redoStack.pop();
-      this.moveHistory.push(new Move(
-        move.row, move.col,
-        this.grid[move.row][move.col],
-        move.oldValue,
-        this.notes[move.row][move.col]
-      ));
+      // Save current state for undo
+      const gridCopy = this.grid.map(row => [...row]);
+      const notesCopy = this.notes.map(row => 
+        row.map(cell => new Set([...cell]))
+      );
       
-      this.grid[move.row][move.col] = move.oldValue;
-      this.notes[move.row][move.col] = new Set(move.oldNotes);
+      this.moveHistory.push({
+        grid: gridCopy,
+        notes: notesCopy,
+        moveCount: this.moveCount
+      });
       
+      // Restore redo state
+      const redoState = this.redoStack.pop();
+      this.grid = redoState.grid;
+      this.notes = redoState.notes;
+      this.moveCount = redoState.moveCount;
+      
+      console.log('Redo performed');
       return true;
     }
     
@@ -685,4 +714,4 @@ class SudokuGame {
     resetBombs() {
       this.bombs = 0;
     }
-  }
+}

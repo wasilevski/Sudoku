@@ -751,4 +751,8 @@ class SudokuGame {
 
         return true;
     }
+
+    isInitialCell(row, col) {
+        return this.initialGrid[row][col] !== 0;
+    }
 }

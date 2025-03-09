@@ -27,6 +27,9 @@ class SudokuController {
       } else {
         console.error('renderBoard method not found on boardRenderer');
       }
+      
+      // Store reference to number buttons
+      this.numberButtons = Array.from(document.querySelectorAll('.number-btn'));
     }
     
     /**
@@ -87,14 +90,27 @@ class SudokuController {
      * Handle canvas click
      * @param {MouseEvent} e - The mouse event
      */
-    handleCanvasClick(e) {
-      const rect = this.boardRenderer.canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (this.boardRenderer.canvas.width / rect.width);
-      const y = (e.clientY - rect.top) * (this.boardRenderer.canvas.height / rect.height);
+    handleCanvasClick(event) {
+      // Add logging to debug click coordinates
+      console.log('Click event:', event);
       
+      const rect = event.target.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      
+      // Log calculated coordinates
+      console.log('Calculated coordinates:', { x, y });
+      
+      // We need to account for the device pixel ratio
+      const dpr = window.devicePixelRatio || 1;
       const cellSize = this.boardRenderer.displaySize / 9;
+      
+      // Calculate row and col with DPR
       const row = Math.floor(y / cellSize);
       const col = Math.floor(x / cellSize);
+      
+      // Log calculated cell position
+      console.log('Calculated cell:', { row, col });
       
       this.selectCell(row, col);
     }
@@ -161,6 +177,14 @@ class SudokuController {
       if (row >= 0 && row < 9 && col >= 0 && col < 9) {
         this.boardRenderer.selectedCell = { row, col };
         this.boardRenderer.renderBoard();
+        
+        // Check if selected cell is an initial cell
+        const isInitialCell = this.game.isInitialCell(row, col);
+        
+        // Disable/enable number buttons based on cell type
+        this.numberButtons.forEach(button => {
+          button.disabled = isInitialCell;
+        });
       }
     }
     

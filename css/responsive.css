@@ -1,0 +1,6 @@
+/* Media Queries */
+@media (max-width: 500px) {
+    .controls {
+        width: 100%;
+    }
+}

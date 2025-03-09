@@ -1,0 +1,48 @@
+/* Game Container */
+.game-container {
+    flex: 1;
+    width: 100%;
+    max-width: var(--container-width);
+    background-color: var(--color-game-container);
+    padding: var(--spacing-md);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-lg);
+}
+
+/* Game Stats */
+.game-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+    font-family: var(--font-family-base);
+}
+
+/* Controls */
+.controls {
+    width: var(--board-size);
+    margin: 20px auto;
+}
+
+.input-numbers {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 16px;
+    width: 100%;
+}
+
+.control-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+}

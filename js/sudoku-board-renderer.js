@@ -14,14 +14,15 @@ class SudokuBoardRenderer {
     this.selectedCell = null;
     this.conflicts = [];
     
-    // Create a canvas element inside the container
+    // Create canvas
     this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d');
     
     // Get the device pixel ratio
     this.dpr = window.devicePixelRatio || 1;
     
     // Set fixed display size
-    this.displaySize = 349;
+    this.displaySize = 349;  // This matches our CSS
     
     // Set the display size (css pixels)
     this.canvas.style.width = `${this.displaySize}px`;
@@ -30,6 +31,9 @@ class SudokuBoardRenderer {
     // Set actual size in memory (scaled for device pixel ratio)
     this.canvas.width = this.displaySize * this.dpr;
     this.canvas.height = this.displaySize * this.dpr;
+    
+    // Scale all drawing operations by the dpr
+    this.ctx.scale(this.dpr, this.dpr);
     
     this.container.appendChild(this.canvas);
     
@@ -47,6 +51,17 @@ class SudokuBoardRenderer {
     
     // Initial render
     this.renderBoard();
+    
+    // Get CSS variables for colors
+    const styles = getComputedStyle(document.documentElement);
+    this.COLOR_NORMAL = styles.getPropertyValue('--color-normal').trim();
+    this.COLOR_PLAYER = styles.getPropertyValue('--color-player').trim();
+    this.COLOR_CONFLICT = styles.getPropertyValue('--color-conflict').trim();
+    this.BG_SELECTED = styles.getPropertyValue('--bg-selected').trim();
+    this.BG_CONFLICT = styles.getPropertyValue('--bg-conflict').trim();
+    this.BG_ROW_COL = styles.getPropertyValue('--bg-row-col').trim();
+    this.BG_INITIAL = styles.getPropertyValue('--bg-initial').trim();
+    this.BG_NORMAL = styles.getPropertyValue('--bg-normal').trim();
   }
   
   /**
@@ -64,25 +79,12 @@ class SudokuBoardRenderer {
     
     const cellSize = this.displaySize / 9;
     
-    // Get the computed style for the game container color
-    const computedStyle = getComputedStyle(document.documentElement);
-    const gameContainerColor = computedStyle.getPropertyValue('--color-game-container').trim();
-    
     // Font definitions
     const FONT_NORMAL = '21px Inter';
     const FONT_SELECTED = '30px Inter';
     
-    // Color definitions
-    const COLOR_NORMAL = '#000000';
-    const COLOR_PLAYER = '#4783FF';
-    const COLOR_CONFLICT = '#E26B5F';
-    const BG_SELECTED = '#BAD0FF';
-    const BG_CONFLICT = '#FFCAC5';
-    const BG_ROW_COL = '#D1E0FF';
-    const BG_INITIAL = '#f5f5f5';
-    
     // Draw the background using CSS variable
-    ctx.fillStyle = gameContainerColor;
+    ctx.fillStyle = this.BG_INITIAL;
     ctx.fillRect(0, 0, this.displaySize, this.displaySize);
     
     // First: Draw initial cell backgrounds
@@ -93,7 +95,10 @@ class SudokuBoardRenderer {
       for (let col = 0; col < 9; col++) {
         const isInitial = initialGrid[row][col] !== 0;
         if (isInitial) {
-          ctx.fillStyle = BG_INITIAL;
+          ctx.fillStyle = this.BG_INITIAL;
+          ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
+        } else {
+          ctx.fillStyle = this.BG_NORMAL;
           ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
         }
       }
@@ -102,7 +107,7 @@ class SudokuBoardRenderer {
     // Second: Draw row and column highlighting for selected cell
     if (this.selectedCell) {
       const { row, col } = this.selectedCell;
-      ctx.fillStyle = BG_ROW_COL;
+      ctx.fillStyle = this.BG_ROW_COL;
       ctx.fillRect(0, row * cellSize, this.displaySize, cellSize);
       ctx.fillRect(col * cellSize, 0, cellSize, this.displaySize);
     }
@@ -114,10 +119,10 @@ class SudokuBoardRenderer {
         const isSelected = this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col;
         
         if (isSelected) {
-          ctx.fillStyle = isInConflict ? BG_CONFLICT : BG_SELECTED;
+          ctx.fillStyle = isInConflict ? this.BG_CONFLICT : this.BG_SELECTED;
           ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
         } else if (isInConflict) {
-          ctx.fillStyle = BG_CONFLICT;
+          ctx.fillStyle = this.BG_CONFLICT;
           ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
         }
       }
@@ -136,20 +141,23 @@ class SudokuBoardRenderer {
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           
+          // Different offsets for selected vs normal state
+          const verticalOffset = isSelected ? 1 : 0;  // Adjust these values as needed
+          
           if (isSelected) {
-            ctx.fillStyle = isInConflict ? COLOR_CONFLICT : COLOR_PLAYER;
+            ctx.fillStyle = isInConflict ? this.COLOR_CONFLICT : this.COLOR_PLAYER;
           } else if (isInitial) {
-            ctx.fillStyle = COLOR_NORMAL;
+            ctx.fillStyle = this.COLOR_NORMAL;
           } else if (isInConflict) {
-            ctx.fillStyle = COLOR_CONFLICT;
+            ctx.fillStyle = this.COLOR_CONFLICT;
           } else {
-            ctx.fillStyle = COLOR_PLAYER;
+            ctx.fillStyle = this.COLOR_PLAYER;
           }
           
           ctx.fillText(
             value.toString(),
             col * cellSize + cellSize / 2,
-            row * cellSize + cellSize / 2
+            row * cellSize + cellSize / 2 + verticalOffset
           );
         } else {
           // Draw notes if cell is empty
@@ -174,10 +182,11 @@ class SudokuBoardRenderer {
     }
     
     // Finally: Draw grid lines
-    ctx.strokeStyle = '#cccccc';
+    ctx.strokeStyle = '#5B5B5B';
     ctx.lineWidth = 1;
     
     // Draw minor grid lines
+    ctx.lineWidth = 0.5;
     for (let i = 0; i <= 9; i++) {
       ctx.beginPath();
       ctx.moveTo(i * cellSize, 0);

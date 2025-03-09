@@ -64,6 +64,10 @@ class SudokuRiveController {
     
     const cellSize = this.displaySize / 9;
     
+    // Get the computed style for the game container color
+    const computedStyle = getComputedStyle(document.documentElement);
+    const gameContainerColor = computedStyle.getPropertyValue('--color-game-container').trim();
+    
     // Font definitions
     const FONT_NORMAL = '21px Inter';
     const FONT_SELECTED = '30px Inter';
@@ -77,8 +81,8 @@ class SudokuRiveController {
     const BG_ROW_COL = '#D1E0FF';
     const BG_INITIAL = '#f5f5f5';
     
-    // Draw the background
-    ctx.fillStyle = '#ffffff';
+    // Draw the background using CSS variable
+    ctx.fillStyle = gameContainerColor;
     ctx.fillRect(0, 0, this.displaySize, this.displaySize);
     
     // First: Draw initial cell backgrounds

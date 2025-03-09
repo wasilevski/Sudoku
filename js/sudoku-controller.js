@@ -6,11 +6,11 @@ class SudokuController {
     /**
      * Create a new Sudoku controller
      * @param {SudokuGame} game - The Sudoku game instance
-     * @param {SudokuRiveController} riveController - The Sudoku Rive controller
+     * @param {SudokuBoardRenderer} boardRenderer - The Sudoku board renderer
      */
-    constructor(game, riveController) {
+    constructor(game, boardRenderer) {
       this.game = game;
-      this.riveController = riveController;
+      this.boardRenderer = boardRenderer;
       this.isNoteMode = false;
       this.timer = null;
       this.secondsElapsed = 0;
@@ -22,10 +22,10 @@ class SudokuController {
       this.updateMoveCounter();
       
       // Ensure the board is rendered - use renderBoard instead of render
-      if (typeof this.riveController.renderBoard === 'function') {
-        this.riveController.renderBoard();
+      if (typeof this.boardRenderer.renderBoard === 'function') {
+        this.boardRenderer.renderBoard();
       } else {
-        console.error('renderBoard method not found on riveController');
+        console.error('renderBoard method not found on boardRenderer');
       }
     }
     
@@ -33,89 +33,54 @@ class SudokuController {
      * Set up event listeners for user interactions
      */
     setupEventListeners() {
-      // Canvas click
-      this.riveController.canvas.addEventListener('click', this.handleCanvasClick.bind(this));
-      
-      // Number buttons
-      document.querySelectorAll('.number-btn').forEach(button => {
-        button.addEventListener('click', () => {
-          const num = parseInt(button.dataset.number);
-          this.handleNumberInput(num);
-        });
-      });
-      
-      // Note toggle
-      document.getElementById('notes-btn').addEventListener('click', () => {
-        this.isNoteMode = !this.isNoteMode;
-        document.getElementById('notes-btn').classList.toggle('active', this.isNoteMode);
-        console.log(`Note mode ${this.isNoteMode ? 'enabled' : 'disabled'}`);
-      });
-      
-      // Undo button
-      document.getElementById('undo-btn').addEventListener('click', () => {
-        if (this.game.undo()) {
-          this.updateMoveCounter();
-          this.riveController.conflicts = this.game.findConflicts();
-          this.riveController.render();
-          console.log('Undo performed');
+      try {
+        // Ensure canvas exists before adding listener
+        if (!this.boardRenderer || !this.boardRenderer.canvas) {
+          throw new Error('Board renderer or canvas not properly initialized');
         }
-      });
-      
-      // Redo button
-      document.getElementById('redo-button').addEventListener('click', () => {
-        if (this.game.redo()) {
-          this.updateMoveCounter();
-          this.riveController.conflicts = this.game.findConflicts();
-          this.riveController.render();
-          console.log('Redo performed');
-        }
-      });
-      
-      // Hint button
-      document.getElementById('hint-btn').addEventListener('click', () => {
-        const hint = this.game.getHint();
-        if (hint) {
-          this.riveController.selectedCell = { row: hint.row, col: hint.col };
-          this.game.makeMove(hint.row, hint.col, hint.value);
-          this.updateMoveCounter();
-          this.riveController.render();
-          console.log(`Hint provided: ${hint.value} at ${hint.row},${hint.col}`);
-        }
-      });
-      
-      // New game button
-      document.getElementById('new-game').addEventListener('click', () => {
-        this.newGame();
-        console.log('New game started');
-      });
-      
-      // Theme selector
-      document.getElementById('theme-select').addEventListener('change', (e) => {
-        setTheme(e.target.value);
-        console.log(`Theme changed to ${e.target.value}`);
-      });
-      
-      // Keyboard input
-      document.addEventListener('keydown', (e) => {
-        if (!this.riveController.selectedCell) return;
         
-        if (e.key >= '0' && e.key <= '9') {
-          this.handleNumberInput(parseInt(e.key));
-        } else if (e.key === 'n') {
-          // Toggle note mode
-          this.isNoteMode = !this.isNoteMode;
-          document.getElementById('notes-btn').classList.toggle('active', this.isNoteMode);
-          console.log(`Note mode ${this.isNoteMode ? 'enabled' : 'disabled'}`);
-        } else if (e.key === 'ArrowUp' && this.riveController.selectedCell.row > 0) {
-          this.selectCell(this.riveController.selectedCell.row - 1, this.riveController.selectedCell.col);
-        } else if (e.key === 'ArrowDown' && this.riveController.selectedCell.row < 8) {
-          this.selectCell(this.riveController.selectedCell.row + 1, this.riveController.selectedCell.col);
-        } else if (e.key === 'ArrowLeft' && this.riveController.selectedCell.col > 0) {
-          this.selectCell(this.riveController.selectedCell.row, this.riveController.selectedCell.col - 1);
-        } else if (e.key === 'ArrowRight' && this.riveController.selectedCell.col < 8) {
-          this.selectCell(this.riveController.selectedCell.row, this.riveController.selectedCell.col + 1);
+        // Add canvas click listener
+        this.boardRenderer.canvas.addEventListener('click', (e) => this.handleCanvasClick(e));
+        
+        // Add number button listeners
+        document.querySelectorAll('.number-btn').forEach(button => {
+          button.addEventListener('click', () => {
+            const num = parseInt(button.dataset.number);
+            this.handleNumberInput(num);
+          });
+        });
+        
+        // Keyboard input for numbers
+        document.addEventListener('keydown', (e) => {
+          if (e.key >= '0' && e.key <= '9') {
+            this.handleNumberInput(parseInt(e.key));
+          }
+        });
+        
+        // Control buttons
+        const notesBtn = document.getElementById('notes-btn');
+        const hintBtn = document.getElementById('hint-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        
+        if (notesBtn) {
+          notesBtn.addEventListener('click', () => {
+            this.isNoteMode = !this.isNoteMode;
+            notesBtn.classList.toggle('active');
+          });
         }
-      });
+        
+        if (hintBtn) {
+          hintBtn.addEventListener('click', () => this.handleHint());
+        }
+        
+        if (undoBtn) {
+          undoBtn.addEventListener('click', () => this.handleUndo());
+        }
+        
+        console.log('Event listeners set up successfully');
+      } catch (error) {
+        console.error('Error setting up event listeners:', error);
+      }
     }
     
     /**
@@ -123,14 +88,15 @@ class SudokuController {
      * @param {MouseEvent} e - The mouse event
      */
     handleCanvasClick(e) {
-      const rect = this.riveController.canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (this.riveController.canvas.width / rect.width);
-      const y = (e.clientY - rect.top) * (this.riveController.canvas.height / rect.height);
+      const rect = this.boardRenderer.canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (this.boardRenderer.canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (this.boardRenderer.canvas.height / rect.height);
       
-      const cell = this.riveController.getCellFromCoordinates(x, y);
-      if (cell) {
-        this.selectCell(cell.row, cell.col);
-      }
+      const cellSize = this.boardRenderer.displaySize / 9;
+      const row = Math.floor(y / cellSize);
+      const col = Math.floor(x / cellSize);
+      
+      this.selectCell(row, col);
     }
     
     /**
@@ -139,8 +105,8 @@ class SudokuController {
      */
     handleNumberInput(num) {
       console.log('Handling input:', num, 'for cell', 
-        this.riveController.selectedCell ? 
-        `${this.riveController.selectedCell.row},${this.riveController.selectedCell.col}` : 
+        this.boardRenderer.selectedCell ? 
+        `${this.boardRenderer.selectedCell.row},${this.boardRenderer.selectedCell.col}` : 
         'none selected'
       );
       
@@ -154,14 +120,14 @@ class SudokuController {
      * @param {number} num - The number pressed (1-9, 0 to clear)
      */
     handleNumberPress(num) {
-      const cell = this.riveController.selectedCell;
+      const cell = this.boardRenderer.selectedCell;
       if (!cell) return;
       
       const { row, col } = cell;
       
       if (this.isNoteMode && num !== 0) {
         this.game.toggleNote(row, col, num);
-        this.riveController.renderBoard();
+        this.boardRenderer.renderBoard();
         return;
       }
       
@@ -172,13 +138,13 @@ class SudokuController {
       if (!this.game.isValidMove(row, col, num)) {
         // Get all cells that conflict with this move
         const conflicts = this.game.findConflicts(row, col, num);
-        this.riveController.updateConflicts(conflicts);
+        this.boardRenderer.updateConflicts(conflicts);
       } else {
         // If the move is valid, clear any existing conflicts
-        this.riveController.checkAndClearConflicts();
+        this.boardRenderer.checkAndClearConflicts();
       }
       
-      this.riveController.renderBoard();
+      this.boardRenderer.renderBoard();
       this.updateMoveCounter();
       
       if (this.game.isComplete()) {
@@ -192,10 +158,10 @@ class SudokuController {
      * @param {number} col - Column index (0-8)
      */
     selectCell(row, col) {
-      // Allow selecting any cell, but only allow input for non-initial cells
-      this.riveController.selectedCell = { row, col };
-      console.log(`Selected cell: ${row},${col}`);
-      this.riveController.render();
+      if (row >= 0 && row < 9 && col >= 0 && col < 9) {
+        this.boardRenderer.selectedCell = { row, col };
+        this.boardRenderer.renderBoard();
+      }
     }
     
     /**
@@ -293,7 +259,7 @@ class SudokuController {
       this.game.generatePuzzle();
       this.game.resetBombs();
       this.selectedCell = null;
-      this.riveController.renderFullBoard();
+      this.boardRenderer.renderFullBoard();
       this.resetTimer();
       this.updateMoveCounter();
     }
@@ -304,5 +270,31 @@ class SudokuController {
     handleGameComplete() {
       // Implement game completion handling logic
       console.log('Game completed');
+    }
+
+    /**
+     * Handle hint
+     */
+    handleHint() {
+      const hint = this.game.getHint();
+      if (hint) {
+        this.boardRenderer.selectedCell = { row: hint.row, col: hint.col };
+        this.game.makeMove(hint.row, hint.col, hint.value);
+        this.updateMoveCounter();
+        this.boardRenderer.render();
+        console.log(`Hint provided: ${hint.value} at ${hint.row},${hint.col}`);
+      }
+    }
+
+    /**
+     * Handle undo
+     */
+    handleUndo() {
+      if (this.game.undo()) {
+        this.updateMoveCounter();
+        this.boardRenderer.conflicts = this.game.findConflicts();
+        this.boardRenderer.render();
+        console.log('Undo performed');
+      }
     }
 }

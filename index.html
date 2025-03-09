@@ -48,23 +48,10 @@
     </div>
   </div>
   
-  <script src="js/theme.js"></script>
   <script src="js/sudoku-game.js"></script>
-  <script src="js/sudoku-rive-controller.js"></script>
+  <script src="js/sudoku-board-renderer.js"></script>
   <script src="js/sudoku-controller.js"></script>
+  <script src="js/app.js"></script>
   <script src="https://unpkg.com/@rive-app/canvas@1.0.98"></script>
-  <script>
-    // Initialize the game after all scripts have loaded
-    document.addEventListener('DOMContentLoaded', () => {
-      const game = new SudokuGame('medium');
-      
-      // Create Rive controller
-      const riveContainer = document.getElementById('sudoku-board-container');
-      const riveController = new SudokuRiveController(riveContainer, game);
-      
-      // Create game controller with Rive
-      const controller = new SudokuController(game, riveController);
-    });
-  </script>
 </body>
 </html>

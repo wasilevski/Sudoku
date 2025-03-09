@@ -1,8 +1,8 @@
 /**
- * SudokuRiveController class
+ * SudokuBoardRenderer class
  * Handles the canvas-based rendering of the Sudoku board
  */
-class SudokuRiveController {
+class SudokuBoardRenderer {
   /**
    * Create a new Sudoku controller
    * @param {HTMLElement} container - The container element for the canvas

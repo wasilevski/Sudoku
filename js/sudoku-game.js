@@ -714,4 +714,41 @@ class SudokuGame {
     resetBombs() {
       this.bombs = 0;
     }
+
+    /**
+     * Check if the game is complete and all numbers are valid
+     * @returns {boolean} True if the game is complete and valid
+     */
+    isComplete() {
+        // Check if all cells are filled
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.grid[row][col] === 0) {
+                    return false;
+                }
+            }
+        }
+
+        // Check if all numbers are valid
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const currentNum = this.grid[row][col];
+                
+                // Temporarily clear the current cell
+                this.grid[row][col] = 0;
+                
+                // Check if the number is valid in this position
+                const isValid = this.isValidMove(row, col, currentNum);
+                
+                // Restore the number
+                this.grid[row][col] = currentNum;
+                
+                if (!isValid) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }

@@ -68,151 +68,28 @@ class SudokuBoardRenderer {
    * Render the Sudoku board
    */
   renderBoard() {
-    const ctx = this.canvas.getContext('2d');
-    
-    // Reset transform and clear
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    
-    // Scale everything for retina display
-    ctx.scale(this.dpr, this.dpr);
-    
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const cellSize = this.displaySize / 9;
-    
-    // Font definitions
-    const FONT_NORMAL = '21px Inter';
-    const FONT_SELECTED = '30px Inter';
-    
-    // Draw the background using CSS variable
-    ctx.fillStyle = this.BG_INITIAL;
-    ctx.fillRect(0, 0, this.displaySize, this.displaySize);
-    
-    // First: Draw initial cell backgrounds
-    const grid = this.game.getGrid();
-    const initialGrid = this.game.getInitialGrid();
-    
+
+    // Draw cells
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {
-        const isInitial = initialGrid[row][col] !== 0;
-        if (isInitial) {
-          ctx.fillStyle = this.BG_INITIAL;
-          ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
-        } else {
-          ctx.fillStyle = this.BG_NORMAL;
-          ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
-        }
-      }
-    }
-    
-    // Second: Draw row and column highlighting for selected cell
-    if (this.selectedCell) {
-      const { row, col } = this.selectedCell;
-      ctx.fillStyle = this.BG_ROW_COL;
-      ctx.fillRect(0, row * cellSize, this.displaySize, cellSize);
-      ctx.fillRect(col * cellSize, 0, cellSize, this.displaySize);
-    }
-    
-    // Third: Draw conflict and selected cell backgrounds on top
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        const isInConflict = this.conflicts.some(c => c.row === row && c.col === col);
-        const isSelected = this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col;
-        
-        if (isSelected) {
-          ctx.fillStyle = isInConflict ? this.BG_CONFLICT : this.BG_SELECTED;
-          ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
-        } else if (isInConflict) {
-          ctx.fillStyle = this.BG_CONFLICT;
-          ctx.fillRect(col * cellSize + 1, row * cellSize + 1, cellSize - 2, cellSize - 2);
-        }
-      }
-    }
-    
-    // Fourth: Draw numbers
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        const value = grid[row][col];
-        const isInitial = initialGrid[row][col] !== 0;
-        const isInConflict = this.conflicts.some(c => c.row === row && c.col === col);
-        const isSelected = this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col;
-        
+        // Draw cell background
+        this.ctx.fillStyle = this.getCellBackgroundColor(row, col);
+        this.ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+
+        // Draw cell value or notes
+        const value = this.game.grid[row][col];
         if (value !== 0) {
-          ctx.font = isSelected ? FONT_SELECTED : FONT_NORMAL;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          
-          // Different offsets for selected vs normal state
-          const verticalOffset = isSelected ? 1 : 0;  // Adjust these values as needed
-          
-          if (isSelected) {
-            ctx.fillStyle = isInConflict ? this.COLOR_CONFLICT : this.COLOR_PLAYER;
-          } else if (isInitial) {
-            ctx.fillStyle = this.COLOR_NORMAL;
-          } else if (isInConflict) {
-            ctx.fillStyle = this.COLOR_CONFLICT;
-          } else {
-            ctx.fillStyle = this.COLOR_PLAYER;
-          }
-          
-          ctx.fillText(
-            value.toString(),
-            col * cellSize + cellSize / 2,
-            row * cellSize + cellSize / 2 + verticalOffset
-          );
+          this.drawNumber(value, row, col, this.game.initialGrid[row][col] !== 0);
         } else {
-          // Draw notes if cell is empty
-          const notes = this.game.getNotes()[row][col];
-          if (notes.size > 0) {
-            ctx.font = `${cellSize * 0.2}px Inter`;
-            ctx.fillStyle = '#666666';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            const noteSize = cellSize / 3;
-            notes.forEach(num => {
-              const noteRow = Math.floor((num - 1) / 3);
-              const noteCol = (num - 1) % 3;
-              const x = col * cellSize + noteCol * noteSize + noteSize / 2;
-              const y = row * cellSize + noteRow * noteSize + noteSize / 2;
-              ctx.fillText(num.toString(), x, y);
-            });
-          }
+          this.drawNotes(row, col);
         }
       }
     }
-    
-    // Finally: Draw grid lines
-    ctx.strokeStyle = '#5B5B5B';
-    ctx.lineWidth = 1;
-    
-    // Draw minor grid lines
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= 9; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * cellSize, 0);
-      ctx.lineTo(i * cellSize, this.displaySize);
-      ctx.stroke();
-      
-      ctx.beginPath();
-      ctx.moveTo(0, i * cellSize);
-      ctx.lineTo(this.displaySize, i * cellSize);
-      ctx.stroke();
-    }
-    
-    // Draw major grid lines
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2;
-    for (let i = 0; i <= 3; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * (cellSize * 3), 0);
-      ctx.lineTo(i * (cellSize * 3), this.displaySize);
-      ctx.stroke();
-      
-      ctx.beginPath();
-      ctx.moveTo(0, i * (cellSize * 3));
-      ctx.lineTo(this.displaySize, i * (cellSize * 3));
-      ctx.stroke();
-    }
+
+    // Draw grid lines
+    this.drawGridLines();
   }
   
   /**
@@ -260,24 +137,8 @@ class SudokuBoardRenderer {
    * @param {Array} newConflicts - Array of conflict objects
    */
   updateConflicts(newConflicts) {
-    // Clear all existing conflicts when adding new ones
-    this.conflicts = [];
-    
-    // Add the new conflicts including the selected cell
-    if (this.selectedCell) {
-      this.conflicts.push({
-        row: this.selectedCell.row,
-        col: this.selectedCell.col
-      });
-    }
-    
-    // Add all conflicting cells
-    newConflicts.forEach(conflict => {
-      if (!this.conflicts.some(c => c.row === conflict.row && c.col === conflict.col)) {
-        this.conflicts.push(conflict);
-      }
-    });
-    
+    console.log('Updating renderer conflicts:', newConflicts);
+    this.conflicts = newConflicts;
     this.renderBoard();
   }
   
@@ -287,6 +148,121 @@ class SudokuBoardRenderer {
   checkAndClearConflicts() {
     this.conflicts = [];
     this.renderBoard();
+  }
+
+  getCellBackgroundColor(row, col) {
+    // Check if cell is selected
+    if (this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col) {
+      return '#e3f2fd'; // Light blue for selected cell
+    }
+    
+    // Check if cell is in conflict
+    const isConflict = this.conflicts.some(conflict => 
+      conflict.row === row && conflict.col === col
+    );
+    if (isConflict) {
+      return '#ffebee'; // Light red for conflicts
+    }
+    
+    // Check if cell is in the same box as selected cell
+    if (this.selectedCell) {
+      const selectedBox = {
+        row: Math.floor(this.selectedCell.row / 3),
+        col: Math.floor(this.selectedCell.col / 3)
+      };
+      const currentBox = {
+        row: Math.floor(row / 3),
+        col: Math.floor(col / 3)
+      };
+      if (selectedBox.row === currentBox.row && selectedBox.col === currentBox.col) {
+        return '#f5f5f5'; // Light gray for same box
+      }
+    }
+    
+    return '#ffffff'; // White for normal cells
+  }
+
+  drawNumber(num, row, col, isInitial) {
+    const cellSize = this.displaySize / 9;
+    this.ctx.font = `${cellSize * 0.6}px Arial`;
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    
+    // Set color based on whether it's an initial number or not
+    this.ctx.fillStyle = isInitial ? '#000000' : '#2196f3';
+    
+    // Check if this number is in conflict
+    const isConflict = this.conflicts.some(conflict => 
+      conflict.row === row && conflict.col === col
+    );
+    if (isConflict) {
+      this.ctx.fillStyle = '#f44336'; // Red for conflicts
+    }
+    
+    this.ctx.fillText(
+      num.toString(),
+      (col + 0.5) * cellSize,
+      (row + 0.5) * cellSize
+    );
+  }
+
+  drawNotes(row, col) {
+    const cellSize = this.displaySize / 9;
+    const noteSize = cellSize / 3;
+    this.ctx.font = `${noteSize * 0.8}px Arial`;
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    this.ctx.fillStyle = '#757575';
+
+    const notes = this.game.notes[row][col];
+    notes.forEach(num => {
+      const noteRow = Math.floor((num - 1) / 3);
+      const noteCol = (num - 1) % 3;
+      this.ctx.fillText(
+        num.toString(),
+        (col + (noteCol + 1) / 3) * cellSize,
+        (row + (noteRow + 1) / 3) * cellSize
+      );
+    });
+  }
+
+  drawGridLines() {
+    const cellSize = this.displaySize / 9;
+    this.ctx.strokeStyle = '#000000';
+
+    // Draw thin lines
+    this.ctx.lineWidth = 1;
+    for (let i = 0; i <= 9; i++) {
+      if (i % 3 !== 0) {
+        // Vertical lines
+        this.ctx.beginPath();
+        this.ctx.moveTo(i * cellSize, 0);
+        this.ctx.lineTo(i * cellSize, this.displaySize);
+        this.ctx.stroke();
+
+        // Horizontal lines
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, i * cellSize);
+        this.ctx.lineTo(this.displaySize, i * cellSize);
+        this.ctx.stroke();
+      }
+    }
+
+    // Draw thick lines
+    this.ctx.lineWidth = 2;
+    for (let i = 0; i <= 9; i += 3) {
+      // Vertical lines
+      this.ctx.beginPath();
+      this.ctx.moveTo(i * cellSize, 0);
+      this.ctx.lineTo(i * cellSize, this.displaySize);
+      this.ctx.stroke();
+
+      // Horizontal lines
+      this.ctx.beginPath();
+      this.ctx.moveTo(0, i * cellSize);
+      this.ctx.lineTo(this.displaySize, i * cellSize);
+      this.ctx.stroke();
+    }
   }
 }
 

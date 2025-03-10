@@ -16,6 +16,10 @@ class SudokuController {
       this.secondsElapsed = 0;
       this.isPaused = false;
       this.selectedCell = null;
+      this.timerDisplay = document.getElementById('timer');
+      this.moveCounter = document.getElementById('move-counter');
+      this.winPopup = document.getElementById('win-popup');
+      this.conflicts = new Map(); // Track conflicts by value
       
       this.setupEventListeners();
       this.startTimer();
@@ -40,7 +44,6 @@ class SudokuController {
       }
       
       // Add popup elements
-      this.winPopup = document.getElementById('win-popup');
       this.nextPuzzleBtn = document.getElementById('next-puzzle-btn');
       
       // Add next puzzle button listener
@@ -155,41 +158,54 @@ class SudokuController {
      * @param {number} num - The number pressed (1-9, 0 to clear)
      */
     handleNumberPress(num) {
-      const cell = this.boardRenderer.selectedCell;
-      if (!cell) return;
-      
-      const { row, col } = cell;
-      
-      if (this.isNoteMode && num !== 0) {
-        this.game.toggleNote(row, col, num);
+        const cell = this.boardRenderer.selectedCell;
+        if (!cell) return;
+        
+        const { row, col } = cell;
+        console.log(`Handling number press: ${num} for cell ${row},${col}`);
+        
+        if (this.isNoteMode && num !== 0) {
+            this.game.toggleNote(row, col, num);
+            this.boardRenderer.renderBoard();
+            return;
+        }
+        
+        // Store old value and make move
+        const oldValue = this.game.grid[row][col];
+        if (!this.game.makeMove(row, col, num)) {
+            return;
+        }
+        
+        console.log(`Old value: ${oldValue}, New value: ${num}`);
+        
+        // Remove old value's conflicts
+        if (oldValue !== 0) {
+            console.log(`Removing conflicts for old value: ${oldValue}`);
+            this.conflicts.delete(oldValue);
+            this.updateConflictsForNumber(oldValue);
+        }
+        
+        // Update conflicts for new value
+        if (num !== 0) {
+            console.log(`Checking conflicts for new value: ${num}`);
+            this.updateConflictsForNumber(num);
+        }
+        
+        // Clear all current visual conflicts
+        this.boardRenderer.updateConflicts([]);
+        
+        // Update display with actual conflicts
+        const allConflicts = this.getAllConflicts();
+        console.log('All current conflicts:', allConflicts);
+        this.boardRenderer.updateConflicts(allConflicts);
+        
+        // Ensure board is fully updated
         this.boardRenderer.renderBoard();
-        return;
-      }
-      
-      // Make the move
-      this.game.makeMove(row, col, num);
-      
-      // Check for conflicts and update the display
-      if (!this.game.isValidMove(row, col, num)) {
-        const conflicts = this.game.findConflicts(row, col, num);
-        this.boardRenderer.updateConflicts(conflicts);
-      } else {
-        this.boardRenderer.checkAndClearConflicts();
-      }
-      
-      this.boardRenderer.renderBoard();
-      this.updateMoveCounter();
-      
-      // Add debug logging for completion check
-      console.log('Checking for completion after move...');
-      console.log('Current grid state:', this.game.getGrid());
-      
-      if (this.game.isComplete()) {
-        console.log('Game is complete! Showing popup...');
-        this.handleGameComplete();
-      } else {
-        console.log('Game is not complete yet');
-      }
+        this.updateMoveCounter();
+        
+        if (this.game.isComplete()) {
+            this.handleGameComplete();
+        }
     }
     
     /**
@@ -382,6 +398,74 @@ class SudokuController {
             console.log('No next puzzle found, returning to puzzle 1');
             this.winPopup.classList.add('hidden');
             this.loadPuzzle('1');
+        }
+    }
+
+    findConflictsForNumber(num) {
+        const conflicts = new Set();
+        
+        // Check each cell for the specific number
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.game.grid[row][col] !== num) continue;
+                
+                // Check row
+                for (let c = 0; c < 9; c++) {
+                    if (c !== col && this.game.grid[row][c] === num) {
+                        conflicts.add(JSON.stringify({row, col}));
+                        conflicts.add(JSON.stringify({row, col: c}));
+                    }
+                }
+                
+                // Check column
+                for (let r = 0; r < 9; r++) {
+                    if (r !== row && this.game.grid[r][col] === num) {
+                        conflicts.add(JSON.stringify({row, col}));
+                        conflicts.add(JSON.stringify({row: r, col}));
+                    }
+                }
+                
+                // Check 3x3 box
+                const boxRow = Math.floor(row / 3) * 3;
+                const boxCol = Math.floor(col / 3) * 3;
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        const currentRow = boxRow + r;
+                        const currentCol = boxCol + c;
+                        if ((currentRow !== row || currentCol !== col) && 
+                            this.game.grid[currentRow][currentCol] === num) {
+                            conflicts.add(JSON.stringify({row, col}));
+                            conflicts.add(JSON.stringify({row: currentRow, col: currentCol}));
+                        }
+                    }
+                }
+            }
+        }
+        
+        return Array.from(conflicts).map(str => JSON.parse(str));
+    }
+
+    getAllConflicts() {
+        const allConflicts = new Set();
+        for (const [num, conflicts] of this.conflicts.entries()) {
+            console.log(`Getting conflicts for number ${num}:`, conflicts);
+            conflicts.forEach(conflict => {
+                allConflicts.add(JSON.stringify(conflict));
+            });
+        }
+        const result = Array.from(allConflicts).map(str => JSON.parse(str));
+        console.log('Final conflicts list:', result);
+        return result;
+    }
+
+    updateConflictsForNumber(num) {
+        const conflicts = this.findConflictsForNumber(num);
+        if (conflicts.length > 0) {
+            console.log(`Found conflicts for ${num}:`, conflicts);
+            this.conflicts.set(num, conflicts);
+        } else {
+            console.log(`No conflicts for ${num}, removing from conflict map`);
+            this.conflicts.delete(num);
         }
     }
 }

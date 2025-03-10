@@ -18,6 +18,7 @@ class SudokuGame {
       this.bombs = 0;
       this.maxBombs = 3; // Game over at 3 bombs
       this.generatePuzzle();
+      this.currentPuzzleId = null;
     }
     
     /**
@@ -720,39 +721,81 @@ class SudokuGame {
      * @returns {boolean} True if the game is complete and valid
      */
     isComplete() {
+        console.log('Checking if game is complete...');
+        
         // Check if all cells are filled
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
                 if (this.grid[row][col] === 0) {
+                    console.log(`Found empty cell at row ${row}, col ${col}`);
                     return false;
                 }
             }
         }
+        
+        console.log('All cells filled, checking validity...');
 
-        // Check if all numbers are valid
+        // Check rows
         for (let row = 0; row < 9; row++) {
+            const rowNums = new Set();
             for (let col = 0; col < 9; col++) {
-                const currentNum = this.grid[row][col];
-                
-                // Temporarily clear the current cell
-                this.grid[row][col] = 0;
-                
-                // Check if the number is valid in this position
-                const isValid = this.isValidMove(row, col, currentNum);
-                
-                // Restore the number
-                this.grid[row][col] = currentNum;
-                
-                if (!isValid) {
+                rowNums.add(this.grid[row][col]);
+            }
+            if (rowNums.size !== 9) {
+                console.log(`Invalid row ${row}`);
+                return false;
+            }
+        }
+
+        // Check columns
+        for (let col = 0; col < 9; col++) {
+            const colNums = new Set();
+            for (let row = 0; row < 9; row++) {
+                colNums.add(this.grid[row][col]);
+            }
+            if (colNums.size !== 9) {
+                console.log(`Invalid column ${col}`);
+                return false;
+            }
+        }
+
+        // Check 3x3 boxes
+        for (let boxRow = 0; boxRow < 9; boxRow += 3) {
+            for (let boxCol = 0; boxCol < 9; boxCol += 3) {
+                const boxNums = new Set();
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        boxNums.add(this.grid[boxRow + i][boxCol + j]);
+                    }
+                }
+                if (boxNums.size !== 9) {
+                    console.log(`Invalid box at ${boxRow},${boxCol}`);
                     return false;
                 }
             }
         }
 
+        console.log('Puzzle is complete and valid!');
         return true;
     }
 
     isInitialCell(row, col) {
         return this.initialGrid[row][col] !== 0;
+    }
+
+    // Add new method to load predefined puzzle
+    loadPredefinedPuzzle(puzzleId) {
+        const puzzle = PREDEFINED_PUZZLES[puzzleId];
+        if (!puzzle) return false;
+
+        this.grid = JSON.parse(JSON.stringify(puzzle.grid));
+        this.initialGrid = JSON.parse(JSON.stringify(puzzle.grid));
+        this.currentPuzzleId = puzzleId;
+        this.moveHistory = [];
+        this.redoStack = [];
+        this.moveCount = 0;
+        this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
+        
+        return true;
     }
 }

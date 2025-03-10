@@ -25,7 +25,7 @@
         </div>
         <div class="moves-container">
           <span class="info-label">Moves</span>
-          <span id="">0</span>
+          <span id="move-counter">0</span>
         </div>
       </div>
     </header>
@@ -54,6 +54,15 @@
     </div>
   </div>
   
+  <div id="win-popup" class="popup hidden">
+    <div class="popup-content">
+      <h2>Congratulations!</h2>
+      <p>You solved the puzzle!</p>
+      <button id="next-puzzle-btn">Next Puzzle</button>
+    </div>
+  </div>
+  
+  <script src="js/puzzle-data.js"></script>
   <script src="js/sudoku-game.js"></script>
   <script src="js/sudoku-board-renderer.js"></script>
   <script src="js/sudoku-controller.js"></script>

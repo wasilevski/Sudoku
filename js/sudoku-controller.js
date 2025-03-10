@@ -30,6 +30,25 @@ class SudokuController {
       
       // Store reference to number buttons
       this.numberButtons = Array.from(document.querySelectorAll('.number-btn'));
+      
+      // Add puzzle selector listener
+      const puzzleSelect = document.getElementById('puzzle-select');
+      if (puzzleSelect) {
+          puzzleSelect.addEventListener('change', (e) => {
+              this.loadPuzzle(e.target.value);
+          });
+      }
+      
+      // Add popup elements
+      this.winPopup = document.getElementById('win-popup');
+      this.nextPuzzleBtn = document.getElementById('next-puzzle-btn');
+      
+      // Add next puzzle button listener
+      if (this.nextPuzzleBtn) {
+          this.nextPuzzleBtn.addEventListener('click', () => {
+              this.loadNextPuzzle();
+          });
+      }
     }
     
     /**
@@ -152,19 +171,24 @@ class SudokuController {
       
       // Check for conflicts and update the display
       if (!this.game.isValidMove(row, col, num)) {
-        // Get all cells that conflict with this move
         const conflicts = this.game.findConflicts(row, col, num);
         this.boardRenderer.updateConflicts(conflicts);
       } else {
-        // If the move is valid, clear any existing conflicts
         this.boardRenderer.checkAndClearConflicts();
       }
       
       this.boardRenderer.renderBoard();
       this.updateMoveCounter();
       
+      // Add debug logging for completion check
+      console.log('Checking for completion after move...');
+      console.log('Current grid state:', this.game.getGrid());
+      
       if (this.game.isComplete()) {
+        console.log('Game is complete! Showing popup...');
         this.handleGameComplete();
+      } else {
+        console.log('Game is not complete yet');
       }
     }
     
@@ -292,8 +316,20 @@ class SudokuController {
      * Handle game completion
      */
     handleGameComplete() {
-      // Implement game completion handling logic
-      console.log('Game completed');
+      console.log('Handling game completion...');
+      if (this.game.isComplete()) {
+        // Stop the timer
+        this.pauseTimer();
+        
+        // Show the win popup
+        if (this.winPopup) {
+          console.log('Showing win popup');
+          console.log('Current puzzle ID:', this.game.currentPuzzleId);
+          this.winPopup.classList.remove('hidden');
+        } else {
+          console.log('Win popup element not found!');
+        }
+      }
     }
 
     /**
@@ -320,5 +356,32 @@ class SudokuController {
         this.boardRenderer.render();
         console.log('Undo performed');
       }
+    }
+
+    loadPuzzle(puzzleId) {
+        if (this.game.loadPredefinedPuzzle(puzzleId)) {
+            this.boardRenderer.renderBoard();
+            this.resetTimer();
+            this.updateMoveCounter();
+        }
+    }
+
+    // Add method to load next puzzle
+    loadNextPuzzle() {
+        const currentId = parseInt(this.game.currentPuzzleId);
+        console.log('Loading next puzzle. Current ID:', currentId);
+        const nextId = currentId + 1;
+        console.log('Attempting to load puzzle ID:', nextId);
+        
+        // Check if next puzzle exists
+        if (PREDEFINED_PUZZLES[nextId]) {
+            console.log('Found next puzzle, loading puzzle:', nextId);
+            this.winPopup.classList.add('hidden');
+            this.loadPuzzle(nextId.toString());
+        } else {
+            console.log('No next puzzle found, returning to puzzle 1');
+            this.winPopup.classList.add('hidden');
+            this.loadPuzzle('1');
+        }
     }
 }

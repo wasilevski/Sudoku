@@ -21,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize controller
         const controller = new SudokuController(game, boardRenderer);
         
+        // Load initial puzzle
+        const defaultPuzzleId = '1';
+        controller.loadPuzzle(defaultPuzzleId);
+        
         console.log('Game initialized successfully');
     } catch (error) {
         console.error('Error initializing game:', error);

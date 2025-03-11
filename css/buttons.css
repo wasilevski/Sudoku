@@ -15,6 +15,8 @@ button {
 .control-buttons button {
     flex: 1;
     padding: 10px 0;
+    height: 64px;
+    gap: 2px;
     font-size: 16px;
     font-family: var(--font-family-base);
     color: #000000;
@@ -32,9 +34,22 @@ button {
 }
 
 /* Add disabled state styles */
-.input-numbers button:disabled {
-    background-color: transparent;
-    color: rgba(0, 0, 0, 0.15);  /* 15% opacity black */
+.input-numbers button:disabled,
+.number-btn:disabled,
+.number-btn.maxed {
+    background-color: #e0e0e0;
+    color: #999;
+    border-color: #ccc;
     cursor: not-allowed;
-    border-color: rgba(204, 204, 204, 0.15);  /* Making border also transparent */
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Remove any hover effects on disabled buttons */
+.input-numbers button:disabled:hover,
+.number-btn:disabled:hover,
+.number-btn.maxed:hover {
+    background-color: #e0e0e0;
+    color: #999;
+    border-color: #ccc;
 }

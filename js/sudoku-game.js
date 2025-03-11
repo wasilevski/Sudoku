@@ -18,6 +18,7 @@ class SudokuGame {
         this.bombs = 0;
         this.maxBombs = 3; // Game over at 3 bombs
         this.currentPuzzleId = null;
+        this.numberCounts = new Array(10).fill(0); // Index 0 won't be used
         
         // Generate initial puzzle
         this.generatePuzzle();
@@ -190,6 +191,15 @@ class SudokuGame {
 
         // Save state for undo
         this.saveState();
+        
+        // Update number counts
+        const oldValue = this.grid[row][col];
+        if (oldValue > 0) {
+            this.updateNumberCount(oldValue, false); // Decrement old value count
+        }
+        if (value > 0) {
+            this.updateNumberCount(value, true); // Increment new value count
+        }
         
         // Make the move
         this.grid[row][col] = value;
@@ -617,6 +627,46 @@ class SudokuGame {
         this.moveCount = 0;
         this.notes = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
         
+        // Initialize number counts for the new puzzle
+        this.initializeNumberCounts();
+        
         return true;
+    }
+
+    /**
+     * Update the count of a number on the board
+     * @param {number} num - The number to update count for
+     * @param {boolean} isIncrement - True to increment, false to decrement
+     */
+    updateNumberCount(num, isIncrement) {
+        if (num > 0 && num <= 9) {
+            this.numberCounts[num] += isIncrement ? 1 : -1;
+            console.log(`Number ${num} count updated to ${this.numberCounts[num]}`);
+        }
+    }
+
+    /**
+     * Check if a number has reached its maximum occurrences (9)
+     * @param {number} num - The number to check
+     * @returns {boolean} True if the number has reached max occurrences
+     */
+    isNumberMaxed(num) {
+        return this.numberCounts[num] >= 9;
+    }
+
+    /**
+     * Initialize number counts from current grid
+     */
+    initializeNumberCounts() {
+        this.numberCounts.fill(0);
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const num = this.grid[row][col];
+                if (num > 0) {
+                    this.numberCounts[num]++;
+                }
+            }
+        }
+        console.log('Number counts initialized:', this.numberCounts);
     }
 }

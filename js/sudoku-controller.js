@@ -35,6 +35,9 @@ class SudokuController {
       // Store reference to number buttons
       this.numberButtons = Array.from(document.querySelectorAll('.number-btn'));
       
+      // Initial button state update
+      this.updateNumberButtonStates();
+      
       // Add puzzle selector listener
       const puzzleSelect = document.getElementById('puzzle-select');
       if (puzzleSelect) {
@@ -164,7 +167,6 @@ class SudokuController {
         const { row, col } = cell;
         console.log(`Handling number press: ${num} for cell ${row},${col}`);
         
-        // If in note mode, handle notes as before
         if (this.isNoteMode && num !== 0) {
             this.game.toggleNote(row, col, num);
             this.boardRenderer.renderBoard();
@@ -215,6 +217,9 @@ class SudokuController {
             this.updateConflictsForNumber(num);
         }
         
+        // Update number button states
+        this.updateNumberButtonStates();
+        
         // Clear all current visual conflicts
         this.boardRenderer.updateConflicts([]);
         
@@ -238,18 +243,18 @@ class SudokuController {
      * @param {number} col - Column index (0-8)
      */
     selectCell(row, col) {
-      if (row >= 0 && row < 9 && col >= 0 && col < 9) {
-        this.boardRenderer.selectedCell = { row, col };
-        this.boardRenderer.renderBoard();
-        
-        // Check if selected cell is an initial cell
-        const isInitialCell = this.game.isInitialCell(row, col);
-        
-        // Disable/enable number buttons based on cell type
-        this.numberButtons.forEach(button => {
-          button.disabled = isInitialCell;
-        });
-      }
+        if (row >= 0 && row < 9 && col >= 0 && col < 9) {
+            this.boardRenderer.selectedCell = { row, col };
+            this.boardRenderer.renderBoard();
+            
+            // Only enable/disable buttons based on whether they're maxed out
+            this.numberButtons.forEach(button => {
+                const num = parseInt(button.dataset.number);
+                const isMaxed = this.game.isNumberMaxed(num);
+                button.disabled = isMaxed;
+                button.classList.toggle('maxed', isMaxed);
+            });
+        }
     }
     
     /**
@@ -403,6 +408,8 @@ class SudokuController {
             this.boardRenderer.renderBoard();
             this.resetTimer();
             this.updateMoveCounter();
+            // Update button states for the new puzzle
+            this.updateNumberButtonStates();
         }
     }
 
@@ -491,5 +498,20 @@ class SudokuController {
             console.log(`No conflicts for ${num}, removing from conflict map`);
             this.conflicts.delete(num);
         }
+    }
+
+    /**
+     * Update states of all number buttons based on their counts
+     */
+    updateNumberButtonStates() {
+        this.numberButtons.forEach(button => {
+            const num = parseInt(button.dataset.number);
+            const isMaxed = this.game.isNumberMaxed(num);
+            button.disabled = isMaxed;
+            button.classList.toggle('maxed', isMaxed);
+            if (isMaxed) {
+                console.log(`Button ${num} disabled - max occurrences reached`);
+            }
+        });
     }
 }

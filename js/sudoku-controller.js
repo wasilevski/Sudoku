@@ -164,18 +164,42 @@ class SudokuController {
         const { row, col } = cell;
         console.log(`Handling number press: ${num} for cell ${row},${col}`);
         
+        // If in note mode, handle notes as before
         if (this.isNoteMode && num !== 0) {
             this.game.toggleNote(row, col, num);
             this.boardRenderer.renderBoard();
             return;
         }
         
-        // Store old value and make move
-        const oldValue = this.game.grid[row][col];
-        if (!this.game.makeMove(row, col, num)) {
+        // Get current value in the cell
+        const currentValue = this.game.grid[row][col];
+        
+        // If the cell is an initial cell (part of the puzzle), don't allow changes
+        if (this.game.isInitialCell(row, col)) {
             return;
         }
         
+        // If pressing the same number that's already in the cell, clear it
+        const isClearingCell = currentValue === num;
+        if (isClearingCell) {
+            num = 0; // Set to 0 to clear the cell
+        }
+        
+        // Store old value and make move
+        const oldValue = currentValue;
+        
+        // Save current move count
+        const previousMoveCount = this.game.moveCount;
+        
+        if (!this.game.makeMove(row, col, num)) {
+            return;
+        }
+
+        // If we're clearing a cell, restore the previous move count
+        if (isClearingCell) {
+            this.game.moveCount = previousMoveCount;
+        }
+
         console.log(`Old value: ${oldValue}, New value: ${num}`);
         
         // Remove old value's conflicts

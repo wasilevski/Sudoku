@@ -153,33 +153,45 @@ class SudokuBoardRenderer {
   getCellBackgroundColor(row, col) {
     // Check if cell is selected
     if (this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col) {
-      return '#e3f2fd'; // Light blue for selected cell
+        return this.BG_SELECTED; // Selected cell color
     }
     
     // Check if cell is in conflict
     const isConflict = this.conflicts.some(conflict => 
-      conflict.row === row && conflict.col === col
+        conflict.row === row && conflict.col === col
     );
     if (isConflict) {
-      return '#ffebee'; // Light red for conflicts
+        return this.BG_CONFLICT; // Conflict color
+    }
+    
+    // Check if cell is in the same row or column as selected cell (cross selection)
+    if (this.selectedCell) {
+        if (this.selectedCell.row === row || this.selectedCell.col === col) {
+            return this.BG_ROW_COL; // Row/Column highlight color
+        }
     }
     
     // Check if cell is in the same box as selected cell
     if (this.selectedCell) {
-      const selectedBox = {
-        row: Math.floor(this.selectedCell.row / 3),
-        col: Math.floor(this.selectedCell.col / 3)
-      };
-      const currentBox = {
-        row: Math.floor(row / 3),
-        col: Math.floor(col / 3)
-      };
-      if (selectedBox.row === currentBox.row && selectedBox.col === currentBox.col) {
-        return '#f5f5f5'; // Light gray for same box
-      }
+        const selectedBox = {
+            row: Math.floor(this.selectedCell.row / 3),
+            col: Math.floor(this.selectedCell.col / 3)
+        };
+        const currentBox = {
+            row: Math.floor(row / 3),
+            col: Math.floor(col / 3)
+        };
+        if (selectedBox.row === currentBox.row && selectedBox.col === currentBox.col) {
+            return this.BG_ROW_COL; // Same box color
+        }
     }
     
-    return '#ffffff'; // White for normal cells
+    // Check if it's an initial cell
+    if (this.game.isInitialCell(row, col)) {
+        return this.BG_INITIAL; // Initial cell color
+    }
+    
+    return this.BG_NORMAL; // Normal cell color
   }
 
   drawNumber(num, row, col, isInitial) {

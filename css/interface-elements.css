@@ -11,20 +11,6 @@
     overflow-x: hidden;
 }
 
-/* Game Info & Stats */
-.game-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-md);
-    font-size: var(--font-size-lg);
-}
-
-.game-stats {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-md);
-}
-
 /* Controls */
 .controls {
     width: var(--board-size);

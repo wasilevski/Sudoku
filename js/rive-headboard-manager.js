@@ -95,8 +95,17 @@ class RiveHeadboardManager {
                         console.warn('Could not set initial state - Normal trigger not found');
                     }
 
-                    // Update text fields
-                    this.updateTextFields();
+                    // Get initial values from the current puzzle
+                    const currentPuzzle = PREDEFINED_PUZZLES[this.game.currentPuzzleId];
+                    if (currentPuzzle) {
+                        // Update text fields with initial values
+                        this.updateTextFields({
+                            moves: currentPuzzle.goalMoves,
+                            conflicts: currentPuzzle.goalConflicts
+                        });
+                    } else {
+                        console.warn('No current puzzle found for initial values');
+                    }
                 }
             });
         } catch (error) {
@@ -136,7 +145,6 @@ class RiveHeadboardManager {
                     console.warn('Shocked trigger not found or not initialized');
                 }
             }
-            this.updateTextFields();
         });
 
         // Listen for cell selection
@@ -193,16 +201,17 @@ class RiveHeadboardManager {
         });
     }
 
-    updateTextFields() {
+    updateTextFields(data) {
         if (!this.rive) {
             console.log('Rive not ready');
             return;
         }
 
         try {
-            // Update conflicts (placeholder for now)
-            console.log('Setting TextBox1 value to: 888');
-            this.rive.setTextRunValue('TextBox1', '888');
+            // Update conflicts counter
+            const conflicts = data ? data.conflicts.toString() : '0';
+            console.log('Setting TextBox1 value to:', conflicts);
+            this.rive.setTextRunValue('TextBox1', conflicts);
             
             // Verify text was set
             try {
@@ -213,9 +222,9 @@ class RiveHeadboardManager {
             }
             
             // Update moves counter
-            const moveCount = this.game.moveCount.toString();
-            console.log('Setting TextBox2 value to:', moveCount);
-            this.rive.setTextRunValue('TextBox2', moveCount);
+            const moves = data ? data.moves.toString() : '0';
+            console.log('Setting TextBox2 value to:', moves);
+            this.rive.setTextRunValue('TextBox2', moves);
             
             // Verify text was set
             try {

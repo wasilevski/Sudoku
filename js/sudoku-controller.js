@@ -16,15 +16,17 @@ class SudokuController {
       this.secondsElapsed = 0;
       this.isPaused = false;
       this.selectedCell = null;
-      this.timerDisplay = document.getElementById('timer');
-      this.moveCounter = document.getElementById('move-counter');
       this.winPopup = document.getElementById('win-popup');
       this.conflicts = new Map(); // Track conflicts by value
-      this.riveManager = null; // Will be set by app.js
+      this.riveButtonManager = null; // Will be set by app.js
+      this.riveHeadboardManager = null; // Will be set by app.js
+      this.remainingMoves = 0; // Track remaining moves
+      this.remainingConflicts = 0; // Track remaining conflicts
+      this.gameOverPopup = document.createElement('div');
+      this.setupGameOverPopup();
       
       this.setupEventListeners();
       this.startTimer();
-      this.updateMoveCounter();
       
       // Ensure the board is rendered
       if (typeof this.boardRenderer.renderBoard === 'function') {
@@ -163,7 +165,7 @@ class SudokuController {
      */
     handleNumberPress(num) {
         const cell = this.boardRenderer.selectedCell;
-        if (!cell) return;
+        if (!cell || this.remainingMoves <= 0) return;
         
         const { row, col } = cell;
         console.log(`Handling number press: ${num} for cell ${row},${col}`);
@@ -188,19 +190,18 @@ class SudokuController {
             num = 0; // Set to 0 to clear the cell
         }
         
-        // Store old value and make move
+        // Store old value and check if it was in conflict
         const oldValue = currentValue;
-        
-        // Save current move count
-        const previousMoveCount = this.game.moveCount;
+        const oldConflicts = this.findConflictsForNumber(oldValue);
+        const hadConflict = oldConflicts.length > 0;
         
         if (!this.game.makeMove(row, col, num)) {
             return;
         }
 
-        // If we're clearing a cell, restore the previous move count
-        if (isClearingCell) {
-            this.game.moveCount = previousMoveCount;
+        // Decrement remaining moves only if not clearing a cell
+        if (!isClearingCell) {
+            this.remainingMoves--;
         }
 
         console.log(`Old value: ${oldValue}, New value: ${num}`);
@@ -213,14 +214,17 @@ class SudokuController {
         }
         
         // Update conflicts for new value
+        let newConflicts = [];
         if (num !== 0) {
             console.log(`Checking conflicts for new value: ${num}`);
             this.updateConflictsForNumber(num);
+            newConflicts = this.findConflictsForNumber(num);
         }
+        const hasNewConflict = newConflicts.length > 0;
         
         // Update Rive button states
-        if (this.riveManager) {
-            this.riveManager.updateButtonStates();
+        if (this.riveButtonManager) {
+            this.riveButtonManager.updateButtonStates();
         }
         
         // Update number button states
@@ -233,12 +237,24 @@ class SudokuController {
         const allConflicts = this.getAllConflicts();
         console.log('All current conflicts:', allConflicts);
         this.boardRenderer.updateConflicts(allConflicts);
+
+        // Update remaining conflicts only if:
+        // 1. We're not clearing a cell (num !== 0)
+        // 2. We have a new conflict
+        // 3. The previous value wasn't already in conflict OR we're replacing with a different conflicting number
+        if (num !== 0 && hasNewConflict && (!hadConflict || (hadConflict && !isClearingCell))) {
+            this.remainingConflicts = Math.max(0, this.remainingConflicts - 1);
+            console.log('Decremented remaining conflicts to:', this.remainingConflicts);
+        }
         
         // Ensure board is fully updated
         this.boardRenderer.renderBoard();
         this.updateMoveCounter();
         
-        if (this.game.isComplete()) {
+        // Check for game over conditions
+        if (this.remainingMoves <= 0 || this.remainingConflicts <= 0) {
+            this.handleGameOver();
+        } else if (this.game.isComplete()) {
             this.handleGameComplete();
         }
     }
@@ -278,7 +294,6 @@ class SudokuController {
       this.timer = setInterval(() => {
         if (!this.isPaused) {
           this.secondsElapsed++;
-          this.updateTimerDisplay();
         }
       }, 1000);
     }
@@ -303,26 +318,20 @@ class SudokuController {
     resetTimer() {
       this.secondsElapsed = 0;
       this.isPaused = false;
-      this.updateTimerDisplay();
     }
     
     /**
-     * Update the timer display
-     */
-    updateTimerDisplay() {
-      const minutes = Math.floor(this.secondsElapsed / 60);
-      const seconds = this.secondsElapsed % 60;
-      document.getElementById('timer').textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
-    /**
-     * Update the move counter display
+     * Update the move counter
      */
     updateMoveCounter() {
-      const counter = document.getElementById('move-counter');
-      if (counter) {
-        counter.textContent = `Moves: ${this.game.getMoveCount()}`;
+      // Update the move counter in the Rive headboard
+      if (this.riveHeadboardManager) {
+        // Pass the remaining moves and conflicts to update the display
+        const data = {
+          moves: this.remainingMoves,
+          conflicts: this.remainingConflicts
+        };
+        this.riveHeadboardManager.updateTextFields(data);
       }
     }
     
@@ -419,17 +428,28 @@ class SudokuController {
 
     loadPuzzle(puzzleId) {
         if (this.game.loadPredefinedPuzzle(puzzleId)) {
+            // Reset counters based on puzzle goals
+            const puzzle = PREDEFINED_PUZZLES[puzzleId];
+            this.remainingMoves = puzzle.goalMoves;
+            this.remainingConflicts = puzzle.goalConflicts;
+            
             this.boardRenderer.renderBoard();
             this.resetTimer();
-            this.updateMoveCounter();
+            
+            // Clear existing conflicts
+            this.conflicts.clear();
+            this.boardRenderer.updateConflicts([]);
             
             // Update Rive button states for the new puzzle
-            if (this.riveManager) {
-                this.riveManager.updateButtonStates();
+            if (this.riveButtonManager) {
+                this.riveButtonManager.updateButtonStates();
             }
             
             // Update regular button states
             this.updateNumberButtonStates();
+
+            // Update counters display immediately
+            this.updateMoveCounter();
         }
     }
 
@@ -452,8 +472,8 @@ class SudokuController {
         }
         
         // Ensure button states are updated after puzzle load
-        if (this.riveManager) {
-            this.riveManager.updateButtonStates();
+        if (this.riveButtonManager) {
+            this.riveButtonManager.updateButtonStates();
         }
         this.updateNumberButtonStates();
     }
@@ -545,7 +565,40 @@ class SudokuController {
      * Set the RiveButtonManager instance
      * @param {RiveButtonManager} manager - The RiveButtonManager instance
      */
-    setRiveManager(manager) {
-        this.riveManager = manager;
+    setRiveButtonManager(manager) {
+        this.riveButtonManager = manager;
+    }
+
+    /**
+     * Set the RiveHeadboardManager instance
+     * @param {RiveHeadboardManager} manager - The RiveHeadboardManager instance
+     */
+    setRiveHeadboardManager(manager) {
+        this.riveHeadboardManager = manager;
+    }
+
+    setupGameOverPopup() {
+        this.gameOverPopup.className = 'popup hidden';
+        this.gameOverPopup.innerHTML = `
+            <div class="popup-content">
+                <h2>Oops, too bad!</h2>
+                <p>You've run out of moves or conflicts.</p>
+                <div class="popup-actions">
+                    <button id="try-again-btn">Try Again</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(this.gameOverPopup);
+
+        const tryAgainBtn = this.gameOverPopup.querySelector('#try-again-btn');
+        tryAgainBtn.addEventListener('click', () => {
+            this.gameOverPopup.classList.add('hidden');
+            this.loadPuzzle(this.game.currentPuzzleId);
+        });
+    }
+
+    handleGameOver() {
+        this.pauseTimer();
+        this.gameOverPopup.classList.remove('hidden');
     }
 }

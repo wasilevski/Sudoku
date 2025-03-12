@@ -21,10 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize controller
         const controller = new SudokuController(game, renderer);
         
-        // Initialize Rive button manager and connect it to the controller
-        const riveManager = new RiveButtonManager(game, controller);
+        // Initialize Rive managers and connect them to the controller
+        const riveButtonManager = new RiveButtonManager(game, controller);
         const headboardManager = new RiveHeadboardManager(game);
-        controller.setRiveManager(riveManager);
+        controller.setRiveButtonManager(riveButtonManager);
+        controller.setRiveHeadboardManager(headboardManager);
         
         // Load initial puzzle
         const defaultPuzzleId = '1';

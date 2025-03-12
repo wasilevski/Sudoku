@@ -1,4 +1,18 @@
+.headboard-container {
+    width: var(--board-size);
+    height: 120px;
+    margin-bottom: var(--spacing-md);
+    background: var(--color-game-container);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
 
+#headboard-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
 
 .board-container {
     width: var(--board-size);

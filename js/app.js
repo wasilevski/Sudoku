@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Initialize Rive button manager and connect it to the controller
         const riveManager = new RiveButtonManager(game, controller);
+        const headboardManager = new RiveHeadboardManager(game);
         controller.setRiveManager(riveManager);
         
         // Load initial puzzle

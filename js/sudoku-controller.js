@@ -471,6 +471,9 @@ class SudokuController {
             this.loadPuzzle('1');
         }
         
+        // Clear board selection
+        this.boardRenderer.clearSelection();
+        
         // Ensure button states are updated after puzzle load
         if (this.riveButtonManager) {
             this.riveButtonManager.updateButtonStates();

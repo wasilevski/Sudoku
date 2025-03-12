@@ -7,6 +7,22 @@ class RiveHeadboardManager {
         
         // Bind to game events
         this.bindGameEvents();
+        
+        // Add resize handler
+        window.addEventListener('resize', this.handleResize.bind(this));
+    }
+
+    handleResize() {
+        const canvas = document.getElementById('headboard-canvas');
+        if (!canvas || !this.rive) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
     }
 
     async initializeRive() {
@@ -16,6 +32,18 @@ class RiveHeadboardManager {
                 console.error('Headboard canvas not found');
                 return;
             }
+
+            // Get the device pixel ratio and canvas dimensions
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            // Set the canvas size accounting for DPR
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // Scale the canvas CSS dimensions
+            canvas.style.width = `${rect.width}px`;
+            canvas.style.height = `${rect.height}px`;
 
             console.log('Initializing Rive headboard...');
             
@@ -80,11 +108,20 @@ class RiveHeadboardManager {
                         return found;
                     });
                     
+                    // Get the text size trigger
+                    console.log('Looking for LargeText trigger...');
+                    this.largeTextTrigger = this.inputs.find(input => {
+                        const found = input.name === 'LargeText';
+                        console.log('Checking input:', input.name, 'Found:', found);
+                        return found;
+                    });
+                    
                     console.log('Final trigger state:', {
                         normal: this.normalTrigger ? 'found' : 'not found',
                         happy: this.happyTrigger ? 'found' : 'not found',
                         confused: this.confusedTrigger ? 'found' : 'not found',
-                        shocked: this.shockedTrigger ? 'found' : 'not found'
+                        shocked: this.shockedTrigger ? 'found' : 'not found',
+                        largeText: this.largeTextTrigger ? 'found' : 'not found'
                     });
                     
                     // Set initial state

@@ -659,6 +659,9 @@ class SudokuGame {
         // Initialize number counts for the new puzzle
         this.initializeNumberCounts();
         
+        // Emit puzzleLoaded event
+        this.dispatchEvent('puzzleLoaded', { puzzleId });
+        
         return true;
     }
 

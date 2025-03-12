@@ -49,6 +49,11 @@ class SudokuBoardRenderer {
       }
     });
     
+    // Listen for puzzle loaded event
+    this.game.addEventListener('puzzleLoaded', () => {
+      this.clearSelection();
+    });
+    
     // Initial render
     this.renderBoard();
     
@@ -196,7 +201,10 @@ class SudokuBoardRenderer {
 
   drawNumber(num, row, col, isInitial) {
     const cellSize = this.displaySize / 9;
-    this.ctx.font = `${cellSize * 0.6}px Arial`;
+    // Increase font size for selected cell
+    const isSelected = this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col;
+    const fontSize = isSelected ? cellSize * 0.8 : cellSize * 0.6;
+    this.ctx.font = `${fontSize}px Arial`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     
@@ -275,6 +283,14 @@ class SudokuBoardRenderer {
       this.ctx.lineTo(this.displaySize, i * cellSize);
       this.ctx.stroke();
     }
+  }
+
+  /**
+   * Clear the current cell selection
+   */
+  clearSelection() {
+    this.selectedCell = null;
+    this.renderBoard();
   }
 }
 

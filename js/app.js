@@ -11,19 +11,26 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Initialize game components
         const game = new SudokuGame();
-        const boardRenderer = new SudokuBoardRenderer(container, game);
+        const renderer = new SudokuBoardRenderer(container, game);
         
         // Ensure canvas is created before initializing controller
-        if (!boardRenderer.canvas) {
+        if (!renderer.canvas) {
             throw new Error('Canvas was not properly initialized');
         }
         
         // Initialize controller
-        const controller = new SudokuController(game, boardRenderer);
+        const controller = new SudokuController(game, renderer);
+        
+        // Initialize Rive button manager and connect it to the controller
+        const riveManager = new RiveButtonManager(game, controller);
+        controller.setRiveManager(riveManager);
         
         // Load initial puzzle
         const defaultPuzzleId = '1';
         controller.loadPuzzle(defaultPuzzleId);
+        
+        // Initial render
+        renderer.renderBoard();
         
         console.log('Game initialized successfully');
     } catch (error) {

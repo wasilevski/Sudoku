@@ -11,6 +11,7 @@
     overflow-x: hidden;
 }
 
+/* Game Info & Stats */
 .game-info {
     display: flex;
     justify-content: space-between;
@@ -18,35 +19,52 @@
     font-size: var(--font-size-lg);
 }
 
-/* Game Stats */
 .game-stats {
     display: flex;
     justify-content: space-between;
     margin-bottom: var(--spacing-md);
-    font-family: var(--font-family-base);
 }
 
 /* Controls */
 .controls {
     width: var(--board-size);
-    margin: 20px auto;
+    margin: var(--spacing-md) auto;
 }
 
-.input-numbers {
+.number-input {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     gap: 2px;
-    margin-bottom: 16px;
+    margin-bottom: var(--spacing-lg);
     width: 100%;
 }
 
+/* Rive Button Specific */
+.rive-button {
+    width: 38px;
+    height: 80px;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    user-select: none;
+    cursor: pointer;
+    flex: 0 0 38px;
+}
+
+.rive-button canvas {
+    width: 38px;
+    height: 80px;
+    display: block;
+}
+
+/* Control Buttons */
 .control-buttons {
     display: flex;
-    justify-content: space-between;
-    gap: 10px;
+    justify-content: center;
+    gap: var(--spacing-sm);
     width: 100%;
 }
 
+/* Popup */
 .popup {
     position: fixed;
     top: 0;
@@ -65,32 +83,50 @@
 }
 
 .popup-content {
-    background-color: white;
-    padding: 24px;
+    background-color: var(--color-game-container);
+    padding: var(--spacing-lg);
     border-radius: 8px;
     text-align: center;
     max-width: 300px;
     width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .popup-content h2 {
-    margin-bottom: 16px;
-    color: #333;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-normal);
+    font-size: 24px;
+    font-weight: 600;
 }
 
 .popup-content p {
-    margin-bottom: 24px;
-    color: #666;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-text-light);
+    font-size: 16px;
+}
+
+.popup-actions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 #next-puzzle-btn {
     background-color: #4783FF;
     color: white;
-    padding: 12px 24px;
-    border-radius: 4px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: 8px;
     border: none;
-    font-size: 16px;
+    font-size: var(--font-size-lg);
+    font-weight: 500;
     cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+    max-width: 200px;
+    display: block;
 }
 
 #next-puzzle-btn:hover {

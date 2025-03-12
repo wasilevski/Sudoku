@@ -20,12 +20,13 @@ class SudokuController {
       this.moveCounter = document.getElementById('move-counter');
       this.winPopup = document.getElementById('win-popup');
       this.conflicts = new Map(); // Track conflicts by value
+      this.riveManager = null; // Will be set by app.js
       
       this.setupEventListeners();
       this.startTimer();
       this.updateMoveCounter();
       
-      // Ensure the board is rendered - use renderBoard instead of render
+      // Ensure the board is rendered
       if (typeof this.boardRenderer.renderBoard === 'function') {
         this.boardRenderer.renderBoard();
       } else {
@@ -215,6 +216,11 @@ class SudokuController {
         if (num !== 0) {
             console.log(`Checking conflicts for new value: ${num}`);
             this.updateConflictsForNumber(num);
+        }
+        
+        // Update Rive button states
+        if (this.riveManager) {
+            this.riveManager.updateButtonStates();
         }
         
         // Update number button states
@@ -408,7 +414,13 @@ class SudokuController {
             this.boardRenderer.renderBoard();
             this.resetTimer();
             this.updateMoveCounter();
-            // Update button states for the new puzzle
+            
+            // Update Rive button states for the new puzzle
+            if (this.riveManager) {
+                this.riveManager.updateButtonStates();
+            }
+            
+            // Update regular button states
             this.updateNumberButtonStates();
         }
     }
@@ -430,6 +442,12 @@ class SudokuController {
             this.winPopup.classList.add('hidden');
             this.loadPuzzle('1');
         }
+        
+        // Ensure button states are updated after puzzle load
+        if (this.riveManager) {
+            this.riveManager.updateButtonStates();
+        }
+        this.updateNumberButtonStates();
     }
 
     findConflictsForNumber(num) {
@@ -513,5 +531,13 @@ class SudokuController {
                 console.log(`Button ${num} disabled - max occurrences reached`);
             }
         });
+    }
+
+    /**
+     * Set the RiveButtonManager instance
+     * @param {RiveButtonManager} manager - The RiveButtonManager instance
+     */
+    setRiveManager(manager) {
+        this.riveManager = manager;
     }
 }

@@ -4,15 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sudoku Game</title>
-  <head>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/board-elements.css">
-    <link rel="stylesheet" href="css/interface-elements.css">
-    <link rel="stylesheet" href="css/buttons.css">
-    <link rel="stylesheet" href="css/responsive.css">
-</head>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/board-elements.css">
+  <link rel="stylesheet" href="css/interface-elements.css">
+  <link rel="stylesheet" href="css/buttons.css">
+  <link rel="stylesheet" href="css/responsive.css">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@rive-app/canvas@2.7.0"></script>
 </head>
 <body>
   <div class="game-container">
@@ -35,30 +34,26 @@
     </div>
     
     <div class="controls">
-      <div class="input-numbers">
-        <button class="number-btn" data-number="1">1</button>
-        <button class="number-btn" data-number="2">2</button>
-        <button class="number-btn" data-number="3">3</button>
-        <button class="number-btn" data-number="4">4</button>
-        <button class="number-btn" data-number="5">5</button>
-        <button class="number-btn" data-number="6">6</button>
-        <button class="number-btn" data-number="7">7</button>
-        <button class="number-btn" data-number="8">8</button>
-        <button class="number-btn" data-number="9">9</button>
+      <div class="number-input">
+        <div class="rive-button" data-number="1"></div>
+        <div class="rive-button" data-number="2"></div>
+        <div class="rive-button" data-number="3"></div>
+        <div class="rive-button" data-number="4"></div>
+        <div class="rive-button" data-number="5"></div>
+        <div class="rive-button" data-number="6"></div>
+        <div class="rive-button" data-number="7"></div>
+        <div class="rive-button" data-number="8"></div>
+        <div class="rive-button" data-number="9"></div>
       </div>
-      <div class="control-buttons">
-        <button id="notes-btn">Notes</button>
-        <button id="hint-btn">Hint</button>
-        <button id="undo-btn">Undo</button>
-      </div>
-    </div>
   </div>
   
   <div id="win-popup" class="popup hidden">
     <div class="popup-content">
       <h2>Congratulations!</h2>
       <p>You solved the puzzle!</p>
-      <button id="next-puzzle-btn">Next Puzzle</button>
+      <div class="popup-actions">
+        <button id="next-puzzle-btn">Next Puzzle</button>
+      </div>
     </div>
   </div>
   
@@ -66,7 +61,7 @@
   <script src="js/sudoku-game.js"></script>
   <script src="js/sudoku-board-renderer.js"></script>
   <script src="js/sudoku-controller.js"></script>
+  <script src="js/rive-button-manager.js"></script>
   <script src="js/app.js"></script>
-  <script src="https://unpkg.com/@rive-app/canvas@1.0.98"></script>
 </body>
 </html>

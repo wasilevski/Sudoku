@@ -19,6 +19,7 @@ class SudokuGame {
         this.maxBombs = 3; // Game over at 3 bombs
         this.currentPuzzleId = null;
         this.numberCounts = new Array(10).fill(0); // Index 0 won't be used
+        this.eventListeners = new Map(); // Add event system
         
         // Generate initial puzzle
         this.generatePuzzle();
@@ -194,6 +195,15 @@ class SudokuGame {
         
         // Update number counts
         const oldValue = this.grid[row][col];
+        
+        // Check if the move is valid before making it
+        let isValid = true;
+        if (value !== 0) {  // Only check validity for non-zero values
+            isValid = this.isValidPlacement(this.grid, row, col, value);
+            console.log(`Move validity check: ${isValid}`);
+        }
+        
+        // Update counts and make the move
         if (oldValue > 0) {
             this.updateNumberCount(oldValue, false); // Decrement old value count
         }
@@ -207,6 +217,21 @@ class SudokuGame {
         
         // Clear notes for this cell
         this.notes[row][col].clear();
+        
+        // Create event detail with validity information
+        const eventDetail = { 
+            row, 
+            col, 
+            number: value, 
+            isValid: isValid,
+            oldNumber: oldValue 
+        };
+        
+        console.log('Dispatching numberPlaced event with detail:', eventDetail);
+        
+        // Dispatch numberPlaced event
+        const event = new CustomEvent('numberPlaced', { detail: eventDetail });
+        this.dispatchEvent(event);
         
         return true;
     }
@@ -242,6 +267,10 @@ class SudokuGame {
       // Clear redo stack when a new move is made
       this.redoStack = [];
       this.moveCount++;
+      
+      // Dispatch noteToggled event
+      this.dispatchEvent('noteToggled', { row, col, value });
+      
       return true;
     }
     
@@ -668,5 +697,70 @@ class SudokuGame {
             }
         }
         console.log('Number counts initialized:', this.numberCounts);
+    }
+
+    // Event handling methods
+    addEventListener(eventName, callback) {
+        if (!this.eventListeners.has(eventName)) {
+            this.eventListeners.set(eventName, new Set());
+        }
+        this.eventListeners.get(eventName).add(callback);
+        console.log(`Added listener for ${eventName}, total listeners:`, this.eventListeners.get(eventName).size);
+    }
+
+    removeEventListener(eventName, callback) {
+        if (this.eventListeners.has(eventName)) {
+            this.eventListeners.get(eventName).delete(callback);
+        }
+    }
+
+    dispatchEvent(event) {
+        const listeners = this.eventListeners.get(event.type);
+        console.log(`Dispatching ${event.type} event, listeners:`, listeners?.size);
+        if (listeners) {
+            listeners.forEach(callback => {
+                try {
+                    callback(event);
+                } catch (error) {
+                    console.error(`Error in event listener for ${event.type}:`, error);
+                }
+            });
+        }
+        return true;
+    }
+
+    setNumber(row, col, number) {
+        if (row < 0 || row >= 9 || col < 0 || col >= 9) return false;
+        
+        const isValid = this.isValidMove(row, col, number);
+        const oldNumber = this.grid[row][col];
+        
+        if (oldNumber !== 0) {
+            this.numberCounts[oldNumber]--;
+        }
+        
+        this.grid[row][col] = number;
+        
+        if (number !== 0) {
+            this.numberCounts[number]++;
+            this.moveCount++;
+        }
+        
+        // Dispatch numberPlaced event
+        this.dispatchEvent('numberPlaced', { 
+            row, 
+            col, 
+            number, 
+            isValid,
+            oldNumber 
+        });
+        
+        return true;
+    }
+
+    selectCell(row, col) {
+        this.selectedCell = { row, col };
+        // Dispatch cellSelected event
+        this.dispatchEvent('cellSelected', { row, col });
     }
 }

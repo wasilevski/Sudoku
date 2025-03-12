@@ -250,8 +250,16 @@ class SudokuController {
      */
     selectCell(row, col) {
         if (row >= 0 && row < 9 && col >= 0 && col < 9) {
+            console.log('Selecting cell:', row, col);
             this.boardRenderer.selectedCell = { row, col };
             this.boardRenderer.renderBoard();
+            
+            // Dispatch cellSelected event
+            const event = new CustomEvent('cellSelected', { 
+                detail: { row, col }
+            });
+            console.log('Dispatching cellSelected event:', event);
+            this.game.dispatchEvent(event);
             
             // Only enable/disable buttons based on whether they're maxed out
             this.numberButtons.forEach(button => {

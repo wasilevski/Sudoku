@@ -261,11 +261,13 @@ class SudokuController {
         this.boardRenderer.renderBoard();
         this.updateMoveCounter();
         
-        // Check for game over conditions
-        if (this.remainingMoves <= 0 || this.remainingConflicts <= 0) {
-            this.handleGameOver();
-        } else if (this.game.isComplete()) {
+        // First check if the puzzle is complete (win condition)
+        if (this.game.isComplete()) {
             this.handleGameComplete();
+        }
+        // Only check for game over if the puzzle is not complete
+        else if (this.remainingMoves <= 0 || this.remainingConflicts <= 0) {
+            this.handleGameOver();
         }
     }
     

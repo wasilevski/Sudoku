@@ -77,6 +77,8 @@ class SudokuController {
         document.querySelectorAll('.number-btn').forEach(button => {
           button.addEventListener('click', () => {
             const num = parseInt(button.dataset.number);
+            // Even if the button is disabled, we still want to handle the click
+            // The handleNumberPress method will check if it's a valid action
             this.handleNumberInput(num);
           });
         });
@@ -181,6 +183,14 @@ class SudokuController {
         
         // If the cell is an initial cell (part of the puzzle), don't allow changes
         if (this.game.isInitialCell(row, col)) {
+            return;
+        }
+        
+        // Check if the number is maxed out
+        const isMaxed = this.game.isNumberMaxed(num);
+        
+        // If the number is maxed out, only allow clearing if it's the same number in the selected cell
+        if (isMaxed && currentValue !== num) {
             return;
         }
         
@@ -556,10 +566,20 @@ class SudokuController {
         this.numberButtons.forEach(button => {
             const num = parseInt(button.dataset.number);
             const isMaxed = this.game.isNumberMaxed(num);
-            button.disabled = isMaxed;
+            
+            // Check if this maxed number is in the selected cell
+            let canClear = false;
+            if (isMaxed && this.boardRenderer.selectedCell) {
+                const { row, col } = this.boardRenderer.selectedCell;
+                canClear = !this.game.isInitialCell(row, col) && 
+                          this.game.grid[row][col] === num;
+            }
+            
+            // Only disable if maxed AND we can't clear it
+            button.disabled = isMaxed && !canClear;
             button.classList.toggle('maxed', isMaxed);
             if (isMaxed) {
-                console.log(`Button ${num} disabled - max occurrences reached`);
+                console.log(`Button ${num} disabled - max occurrences reached${canClear ? ' but can be cleared' : ''}`);
             }
         });
     }

@@ -16,12 +16,48 @@
   <script src="https://unpkg.com/@rive-app/canvas@2.7.0"></script>
 </head>
 <body>
+  <!-- Gold display -->
+  <div id="gold-container" class="gold-display">
+    <img src="assets/iconGold.svg" alt="Gold" class="gold-icon">
+    <span id="gold-display">5,000</span>
+  </div>
+
   <!-- Home Screen -->
   <div id="home-screen" class="screen">
     <div class="home-content">
-      <h2 id="puzzle-number" class="puzzle-number"></h2>
-      <h1 id="puzzle-name" class="puzzle-title"></h1>
-      <button id="play-button" class="cta-button">Play</button>
+      <!-- Puzzle image -->
+      <img id="puzzle-image" src="assets/numberPuzzleStart.png" alt="Current Puzzle" class="puzzle-image">
+      
+      <!-- Progress and level selection -->
+      <div class="bottom-controls">
+        <div class="progress-container">
+          <div class="progress-label">Cruze 1</div>
+          <div class="progress-bar-container">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+        </div>
+        <button id="level-button" class="level-button">Level 1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level Selection Popup -->
+  <div id="level-popup" class="popup hidden">
+    <div class="popup-content">
+      <h2 id="level-popup-title">Level 1</h2>
+      <h3>Select Boosters</h3>
+      <div class="boosters-container">
+        <div class="booster-button">
+          <img src="assets/iconLock.svg" alt="Locked">
+        </div>
+        <div class="booster-button">
+          <img src="assets/iconLock.svg" alt="Locked">
+        </div>
+        <div class="booster-button">
+          <img src="assets/iconLock.svg" alt="Locked">
+        </div>
+      </div>
+      <button id="play-button" class="play-button">Play 1,000 Gold</button>
     </div>
   </div>
 
@@ -56,7 +92,7 @@
         <h2>Congratulations!</h2>
         <p>You solved the puzzle!</p>
         <div class="popup-actions">
-          <button id="next-puzzle-btn">Next Puzzle</button>
+          <button id="next-puzzle-btn">Continue</button>
         </div>
       </div>
     </div>

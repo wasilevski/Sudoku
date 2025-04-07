@@ -70,23 +70,23 @@ export default class SudokuController {
       if (this.nextPuzzleBtn) {
           this.nextPuzzleBtn.addEventListener('click', () => {
               this.winPopup.classList.add('hidden');
-              const hasNextPuzzle = this.homeScreen.progressToNextPuzzle();
-              if (hasNextPuzzle) {
-                  // Hide game screen and show home screen
-                  document.getElementById('game-screen').classList.add('hidden');
-                  this.homeScreen.show();
-                  
-                  // Reset game state
-                  this.selectedCell = null;
-                  this.boardRenderer.clearSelection();
-                  this.resetTimer();
-                  
-                  // Update button states
-                  this.updateNumberButtonStates();
-              } else {
-                  // Handle game completion (all puzzles solved)
-                  alert('Congratulations! You have completed all puzzles!');
-              }
+              document.getElementById('game-screen').classList.add('hidden');
+              
+              // Mark current puzzle as completed and advance to next
+              const currentId = parseInt(this.game.currentPuzzleId);
+              this.homeScreen.onPuzzleCompleted(currentId);
+              
+              // Show home screen and gold container
+              this.homeScreen.show();
+              document.getElementById('gold-container').classList.remove('hidden');
+              
+              // Reset game state
+              this.selectedCell = null;
+              this.boardRenderer.clearSelection();
+              this.resetTimer();
+              
+              // Update button states
+              this.updateNumberButtonStates();
           });
       }
     }
@@ -474,45 +474,74 @@ export default class SudokuController {
     }
 
     loadPuzzle(puzzleId) {
-        console.log('Loading puzzle:', puzzleId);
+        // Clear the board container
+        this.boardRenderer.createCanvas();
         
-        // Hide win popup if it exists
-        if (this.winPopup) {
-            console.log('Hiding win popup');
-            this.winPopup.classList.add('hidden');
-        }
+        // Load the puzzle
+        this.game.loadPredefinedPuzzle(puzzleId);
         
-        if (this.game.loadPredefinedPuzzle(puzzleId)) {
-            // Reset counters based on puzzle goals
-            const puzzle = puzzles[puzzleId - 1];
+        // Reset timer and conflicts
+        this.resetTimer();
+        this.conflicts.clear();
+        
+        // Get the current puzzle goals
+        const puzzle = puzzles[puzzleId - 1];
+        if (puzzle) {
             this.remainingMoves = puzzle.goalMoves;
             this.remainingConflicts = puzzle.goalConflicts;
-            
-            // Recreate the canvas and render the board
-            this.boardRenderer.createCanvas();
-            this.boardRenderer.renderBoard();
-            this.resetTimer();
-            
-            // Clear existing conflicts
-            this.conflicts.clear();
-            this.boardRenderer.updateConflicts([]);
-            
-            // Update Rive button states for the new puzzle
-            if (this.riveButtonManager) {
-                this.riveButtonManager.updateButtonStates();
-            }
-            
-            // Update regular button states
-            this.updateNumberButtonStates();
-
-            // Update counters display immediately
-            this.updateMoveCounter();
-            
-            // Clear board selection
-            if (this.boardRenderer.clearSelection) {
-                this.boardRenderer.clearSelection();
+        }
+        
+        // Reset all game state
+        this.selectedCell = null;
+        this.boardRenderer.clearSelection();
+        this.isNoteMode = false;
+        
+        // Reset note mode button if it exists
+        const notesBtn = document.getElementById('notes-btn');
+        if (notesBtn) {
+            notesBtn.classList.remove('active');
+        }
+        
+        // Reset game counters
+        this.game.moveCount = 0;
+        this.game.bombs = 0;
+        
+        // Reset number counts
+        this.game.numberCounts = new Array(10).fill(0);
+        
+        // Count numbers in the initial grid
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const value = this.game.grid[row][col];
+                if (value > 0) {
+                    this.game.numberCounts[value]++;
+                }
             }
         }
+        
+        // Clear all notes
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                this.game.notes[row][col].clear();
+            }
+        }
+        
+        // Update button states
+        if (this.riveButtonManager) {
+            this.riveButtonManager.updateButtonStates();
+        }
+        this.updateNumberButtonStates();
+        
+        // Update headboard display with remaining values
+        if (this.riveHeadboardManager) {
+            this.riveHeadboardManager.updateTextFields({
+                moves: this.remainingMoves,
+                conflicts: this.remainingConflicts
+            });
+        }
+        
+        // Render the board
+        this.boardRenderer.renderBoard();
     }
 
     // Add method to load next puzzle
@@ -659,16 +688,18 @@ export default class SudokuController {
                 <h2>Oops, too bad!</h2>
                 <p>You've run out of moves or conflicts.</p>
                 <div class="popup-actions">
-                    <button id="try-again-btn">Try Again</button>
+                    <button id="continue-btn">Continue</button>
                 </div>
             </div>
         `;
         document.body.appendChild(this.gameOverPopup);
 
-        const tryAgainBtn = this.gameOverPopup.querySelector('#try-again-btn');
-        tryAgainBtn.addEventListener('click', () => {
+        const continueBtn = this.gameOverPopup.querySelector('#continue-btn');
+        continueBtn.addEventListener('click', () => {
             this.gameOverPopup.classList.add('hidden');
-            this.loadPuzzle(this.game.currentPuzzleId);
+            document.getElementById('game-screen').classList.add('hidden');
+            this.homeScreen.show();
+            document.getElementById('gold-container').classList.remove('hidden');
         });
     }
 
@@ -738,5 +769,30 @@ export default class SudokuController {
             console.log('- Empty cells:', hasEmptyCells);
             console.log('- Conflicts:', conflicts.length);
         }
+    }
+
+    resetGameState() {
+        // Reset selection
+        this.selectedCell = null;
+        this.boardRenderer.clearSelection();
+        
+        // Reset note mode
+        this.isNoteMode = false;
+        const notesBtn = document.getElementById('notes-btn');
+        if (notesBtn) {
+            notesBtn.classList.remove('active');
+        }
+        
+        // Reset timer
+        this.resetTimer();
+        
+        // Reset conflicts
+        this.conflicts.clear();
+        
+        // Update button states
+        this.updateNumberButtonStates();
+        
+        // Ensure the board is rendered with current puzzle
+        this.boardRenderer.renderBoard();
     }
 }

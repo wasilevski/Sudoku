@@ -2,8 +2,11 @@ export default [
     {
         puzzleNumber: 1,
         name: "Baby Steps",
+        difficulty: "Easy",
         goalConflicts: 3,
         goalMoves: 6,
+        goldCost: 1000,
+        goldReward: 2000,
         grid: [
             [5, 3, 4, 6, 7, 8, 9, 1, 2],
             [6, 7, 2, 1, 9, 5, 3, 4, 8],
@@ -31,8 +34,11 @@ export default [
     {
         puzzleNumber: 2,
         name: "Lonely Islands",
+        difficulty: "Easy",
         goalConflicts: 3,
         goalMoves: 6,
+        goldCost: 2000,
+        goldReward: 4000,
         grid: [
             [5, 3, 4, 6, 7, 8, 9, 1, 2],
             [6, 7, 2, 1, 9, 5, 3, 4, 8],  
@@ -60,8 +66,11 @@ export default [
     {
         puzzleNumber: 3,
         name: "Empty Middle Square",
+        difficulty: "Medium",
         goalConflicts: 5,
         goalMoves: 20,
+        goldCost: 3000,
+        goldReward: 6000,
         grid: [
             [5, 3, 4, 6, 7, 8, 9, 1, 2],
             [6, 7, 2, 1, 9, 5, 3, 4, 8],
@@ -89,8 +98,11 @@ export default [
     {
         puzzleNumber: 4,
         name: "Lonely Islands",
+        difficulty: "Medium",
         goalConflicts: 6,
         goalMoves: 20,
+        goldCost: 4000,
+        goldReward: 8000,
         grid: [
             [5, 3, 4, 6, 7, 8, 9, 1, 2],
             [6, 7, 2, 1, 9, 5, 3, 4, 8],
@@ -118,8 +130,11 @@ export default [
     {
         puzzleNumber: 5,
         name: "Lonely Islands",
+        difficulty: "Hard",
         goalConflicts: 5,
         goalMoves: 20,
+        goldCost: 5000,
+        goldReward: 10000,
         grid: [
             [5, 3, 4, 6, 7, 8, 9, 1, 2],
             [6, 0, 2, 1, 0, 5, 3, 0, 8],  // Row 2: Empty Cells at (2,5,8)
@@ -147,8 +162,11 @@ export default [
     {
         puzzleNumber: 6,
         name: "Three Empty Rows",
+        difficulty: "Expert",
         goalConflicts: 10,
         goalMoves: 30,
+        goldCost: 6000,
+        goldReward: 12000,
         grid: [
             [5, 3, 4, 6, 7, 8, 9, 1, 2],
             [0, 0, 0, 0, 0, 0, 0, 0, 0],

@@ -3,6 +3,7 @@ import puzzles from './puzzle-data.js';
 export default class RiveHeadboardManager {
     constructor(game) {
         this.game = game;
+        this.pendingUpdate = null;
         
         // Initialize Rive
         this.initializeRive();
@@ -64,81 +65,30 @@ export default class RiveHeadboardManager {
                     
                     // Get the state machine inputs
                     this.inputs = this.rive.stateMachineInputs('SM_Headboard');
-                    console.log('Raw inputs array:', this.inputs);
                     
-                    // Log detailed input information
-                    console.log('Available inputs:');
-                    if (this.inputs && this.inputs.length > 0) {
-                        this.inputs.forEach((input, index) => {
-                            console.log(`Input ${index}:`, {
-                                name: input.name,
-                                type: input.type,
-                                toString: input.toString(),
-                                properties: Object.keys(input)
-                            });
-                        });
-                    } else {
-                        console.warn('No inputs found in state machine');
-                    }
-
-                    // Get triggers with detailed logging
-                    console.log('Looking for Normal trigger...');
-                    this.normalTrigger = this.inputs.find(input => {
-                        const found = input.name === 'Normal';
-                        console.log('Checking input:', input.name, 'Found:', found);
-                        return found;
-                    });
-                    
-                    console.log('Looking for Happy trigger...');
-                    this.happyTrigger = this.inputs.find(input => {
-                        const found = input.name === 'Happy';
-                        console.log('Checking input:', input.name, 'Found:', found);
-                        return found;
-                    });
-                    
-                    console.log('Looking for Confused trigger...');
-                    this.confusedTrigger = this.inputs.find(input => {
-                        const found = input.name === 'Confused';
-                        console.log('Checking input:', input.name, 'Found:', found);
-                        return found;
-                    });
-                    
-                    console.log('Looking for Shocked trigger...');
-                    this.shockedTrigger = this.inputs.find(input => {
-                        const found = input.name === 'Shocked';
-                        console.log('Checking input:', input.name, 'Found:', found);
-                        return found;
-                    });
-                    
-                    // Get the text size trigger
-                    console.log('Looking for LargeText trigger...');
-                    this.largeTextTrigger = this.inputs.find(input => {
-                        const found = input.name === 'LargeText';
-                        console.log('Checking input:', input.name, 'Found:', found);
-                        return found;
-                    });
-                    
-                    console.log('Final trigger state:', {
-                        normal: this.normalTrigger ? 'found' : 'not found',
-                        happy: this.happyTrigger ? 'found' : 'not found',
-                        confused: this.confusedTrigger ? 'found' : 'not found',
-                        shocked: this.shockedTrigger ? 'found' : 'not found',
-                        largeText: this.largeTextTrigger ? 'found' : 'not found'
-                    });
+                    // Set up triggers
+                    this.normalTrigger = this.inputs.find(input => input.name === 'Normal');
+                    this.happyTrigger = this.inputs.find(input => input.name === 'Happy');
+                    this.confusedTrigger = this.inputs.find(input => input.name === 'Confused');
+                    this.shockedTrigger = this.inputs.find(input => input.name === 'Shocked');
+                    this.largeTextTrigger = this.inputs.find(input => input.name === 'LargeText');
                     
                     // Set initial state
                     if (this.normalTrigger) {
-                        console.log('Setting initial state to Normal');
                         this.normalTrigger.fire();
-                    } else {
-                        console.warn('Could not set initial state - Normal trigger not found');
                     }
 
-                    // Set initial text values
-                    this.updateTextFields({
-                        moves: this.game.moveCount,
-                        conflicts: this.game.bombs
-                    });
+                    // Apply any pending updates
+                    if (this.pendingUpdate) {
+                        this.updateTextFields(this.pendingUpdate);
+                        this.pendingUpdate = null;
+                    } else {
+                        // Set initial values if no pending update
+                        this.updateTextFields({
+                            moves: this.game.moveCount,
+                            conflicts: this.game.conflicts
+                        });
+                    }
                 }
             });
         } catch (error) {
@@ -154,34 +104,16 @@ export default class RiveHeadboardManager {
             // Update text fields with current values
             this.updateTextFields({
                 moves: this.game.moveCount,
-                conflicts: this.game.bombs
+                conflicts: this.game.conflicts
             });
             
             if (event.detail.isValid) {
-                console.log('Valid move detected, attempting to fire happy trigger');
                 if (this.happyTrigger) {
-                    try {
-                        console.log('Firing happy trigger');
-                        this.happyTrigger.fire();
-                        console.log('Happy trigger fired successfully');
-                    } catch (error) {
-                        console.error('Error firing happy trigger:', error);
-                    }
-                } else {
-                    console.warn('Happy trigger not found or not initialized');
+                    this.happyTrigger.fire();
                 }
             } else {
-                console.log('Invalid move detected, attempting to fire shocked trigger');
                 if (this.shockedTrigger) {
-                    try {
-                        console.log('Firing shocked trigger');
-                        this.shockedTrigger.fire();
-                        console.log('Shocked trigger fired successfully');
-                    } catch (error) {
-                        console.error('Error firing shocked trigger:', error);
-                    }
-                } else {
-                    console.warn('Shocked trigger not found or not initialized');
+                    this.shockedTrigger.fire();
                 }
             }
         });
@@ -241,33 +173,24 @@ export default class RiveHeadboardManager {
     }
 
     updateTextFields({ moves, conflicts }) {
+        // If Rive is not initialized yet, store the update for later
         if (!this.rive) {
-            console.warn('Rive not initialized, cannot update text fields');
+            this.pendingUpdate = { moves, conflicts };
             return;
         }
 
         try {
+            // Ensure values are numbers and convert to strings
+            const movesText = (moves || 0).toString();
+            const conflictsText = (conflicts || 0).toString();
+            
+            console.log('Setting text values:', { moves: movesText, conflicts: conflictsText });
+            
             // Update moves counter
-            const movesText = moves.toString();
-            console.log('Setting moves text to:', movesText);
             this.rive.setTextRunValue('TextBox2', movesText);
             
             // Update conflicts counter
-            const conflictsText = conflicts.toString();
-            console.log('Setting conflicts text to:', conflictsText);
             this.rive.setTextRunValue('TextBox1', conflictsText);
-            
-            // Verify text was set
-            try {
-                const verifyMoves = this.rive.getTextRunValue('TextBox2');
-                const verifyConflicts = this.rive.getTextRunValue('TextBox1');
-                console.log('Verified text values:', {
-                    moves: verifyMoves,
-                    conflicts: verifyConflicts
-                });
-            } catch (e) {
-                console.error('Error verifying text values:', e.message);
-            }
         } catch (error) {
             console.error('Error updating text fields:', error);
         }

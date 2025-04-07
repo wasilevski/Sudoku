@@ -9,6 +9,9 @@ export default class SudokuBoardRenderer {
    * @param {SudokuGame} game - The Sudoku game instance
    */
   constructor(container, game) {
+    if (!container) {
+      throw new Error('Container element is required for SudokuBoardRenderer');
+    }
     this.container = container;
     this.game = game;
     this.selectedCell = null;
@@ -19,10 +22,12 @@ export default class SudokuBoardRenderer {
     // Create initial canvas
     this.createCanvas();
     
-    // Listen for puzzle loaded event
-    this.game.addEventListener('puzzleLoaded', () => {
-      this.clearSelection();
-    });
+    // Listen for puzzle loaded event if game instance is provided
+    if (this.game) {
+      this.game.addEventListener('puzzleLoaded', () => {
+        this.clearSelection();
+      });
+    }
     
     // Initial render
     this.renderBoard();
@@ -43,6 +48,11 @@ export default class SudokuBoardRenderer {
    * Create or recreate the canvas element
    */
   createCanvas() {
+    if (!this.container) {
+      console.error('Cannot create canvas: container is not defined');
+      return;
+    }
+
     // Create canvas
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d');
@@ -79,6 +89,11 @@ export default class SudokuBoardRenderer {
    * Render the Sudoku board
    */
   renderBoard() {
+    if (!this.ctx) {
+      console.error('Cannot render board: canvas context is not initialized');
+      return;
+    }
+
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const cellSize = this.displaySize / 9;
 
@@ -89,12 +104,14 @@ export default class SudokuBoardRenderer {
         this.ctx.fillStyle = this.getCellBackgroundColor(row, col);
         this.ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
 
-        // Draw cell value or notes
-        const value = this.game.grid[row][col];
-        if (value !== 0) {
-          this.drawNumber(value, row, col, this.game.initialGrid[row][col] !== 0);
-        } else {
-          this.drawNotes(row, col);
+        // Draw cell value or notes if game instance is available
+        if (this.game) {
+          const value = this.game.grid[row][col];
+          if (value !== 0) {
+            this.drawNumber(value, row, col, this.game.initialGrid[row][col] !== 0);
+          } else {
+            this.drawNotes(row, col);
+          }
         }
       }
     }

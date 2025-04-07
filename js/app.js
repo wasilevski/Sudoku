@@ -1,59 +1,80 @@
 import SudokuGame from './sudoku-game.js';
 import SudokuBoardRenderer from './sudoku-board-renderer.js';
 import SudokuController from './sudoku-controller.js';
+import HomeScreen from './home-screen.js';
 import RiveButtonManager from './rive-button-manager.js';
 import RiveHeadboardManager from './rive-headboard-manager.js';
-import HomeScreen from './home-screen.js';
+import StateManager from './state-manager.js';
 
-export default class App {
+class App {
     constructor() {
-        this.homeScreen = null;
-        this.game = null;
-        this.boardRenderer = null;
-        this.controller = null;
-        this.initialize();
-    }
-
-    initialize() {
-        // Initialize home screen first
-        this.homeScreen = new HomeScreen();
+        // Initialize state manager
+        this.stateManager = new StateManager();
         
-        // Initialize game components but keep them hidden
+        // Initialize screens
+        this.homeScreen = new HomeScreen(this.stateManager);
+        
+        // Initialize game components (hidden initially)
         this.initializeGameComponents();
         
-        // Listen for play button click
-        this.homeScreen.onPlay((puzzleId) => {
-            this.startGame(puzzleId);
+        // Show home screen by default
+        this.showHomeScreen();
+        
+        // Listen for game start event
+        document.addEventListener('startGame', (event) => {
+            this.startGame(event.detail.puzzleId);
         });
     }
-
+    
     initializeGameComponents() {
-        const gameScreen = document.getElementById('game-screen');
-        
-        // Initialize game components
+        // Create game instance
         this.game = new SudokuGame();
-        this.boardRenderer = new SudokuBoardRenderer(document.getElementById('sudoku-board-container'), this.game);
+        
+        // Create board renderer with container and game instance
+        const boardContainer = document.getElementById('sudoku-board-container');
+        if (!boardContainer) {
+            console.error('Sudoku board container not found!');
+            return;
+        }
+        this.boardRenderer = new SudokuBoardRenderer(boardContainer, this.game);
+        
+        // Create game controller
         this.controller = new SudokuController(this.game, this.boardRenderer, this.homeScreen);
         
-        // Initialize Rive managers with proper dependencies
+        // Initialize Rive managers
         this.riveButtonManager = new RiveButtonManager(this.game, this.controller);
         this.riveHeadboardManager = new RiveHeadboardManager(this.game);
         
-        // Set Rive managers in controller using individual setters
-        this.controller.setRiveButtonManager(this.riveButtonManager);
-        this.controller.setRiveHeadboardManager(this.riveHeadboardManager);
+        // Set Rive managers in controller
+        this.controller.riveButtonManager = this.riveButtonManager;
+        this.controller.riveHeadboardManager = this.riveHeadboardManager;
     }
-
+    
+    showHomeScreen() {
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('home-screen').classList.remove('hidden');
+        document.getElementById('gold-container').classList.remove('hidden');
+        this.homeScreen.show();
+    }
+    
     startGame(puzzleId) {
-        // Show game screen and load puzzle
-        const gameScreen = document.getElementById('game-screen');
-        gameScreen.classList.remove('hidden');
+        document.getElementById('home-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('gold-container').classList.add('hidden');
+        
+        this.game.loadPredefinedPuzzle(puzzleId);
         this.controller.loadPuzzle(puzzleId);
+
+        // Listen for puzzle completion and game over
+        this.game.addEventListener('puzzleCompleted', () => {
+            setTimeout(() => this.showHomeScreen(), 1500);
+        });
+
+        this.game.addEventListener('gameOver', () => {
+            setTimeout(() => this.showHomeScreen(), 1500);
+        });
     }
 }
 
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new App();
-    app.initialize();
-});
+// Create and initialize the app
+const app = new App();

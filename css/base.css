@@ -64,13 +64,30 @@ html, body {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 1;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
     transition: opacity 0.3s ease;
 }
 
 .screen.hidden {
     opacity: 0;
     pointer-events: none;
+}
+
+#game-screen {
+    z-index: 20;
+    background: #fff;
+}
+
+.popup {
+    z-index: 30;
+}
+
+#gold-container {
+    z-index: 15; /* Below game screen but above home screen */
 }

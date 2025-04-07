@@ -17,11 +17,11 @@ export default class SudokuGame {
         this.moveHistory = [];
         this.redoStack = [];
         this.moveCount = 0;
-        this.bombs = 0;
-        this.maxBombs = 3; // Game over at 3 bombs
+        this.conflicts = 0;
+        this.maxConflicts = 3;
         this.currentPuzzleId = 1;
-        this.numberCounts = new Array(10).fill(0); // Index 0 won't be used
-        this.eventListeners = new Map(); // Add event system
+        this.numberCounts = new Array(10).fill(0);
+        this.eventListeners = new Map();
         
         // Load first puzzle instead of generating
         this.loadPredefinedPuzzle(1);
@@ -197,15 +197,6 @@ export default class SudokuGame {
         
         // Update number counts
         const oldValue = this.grid[row][col];
-        
-        // Check if the move is valid before making it
-        let isValid = true;
-        if (value !== 0) {  // Only check validity for non-zero values
-            isValid = this.isValidPlacement(this.grid, row, col, value);
-            console.log(`Move validity check: ${isValid}`);
-        }
-        
-        // Update counts and make the move
         if (oldValue > 0) {
             this.updateNumberCount(oldValue, false); // Decrement old value count
         }
@@ -220,20 +211,35 @@ export default class SudokuGame {
         // Clear notes for this cell
         this.notes[row][col].clear();
         
-        // Create event detail with validity information
+        // Check if the move is correct
+        const isCorrect = this.isCorrectMove(row, col, value);
+        if (!isCorrect && value !== 0) {
+            this.conflicts++;
+            console.log(`Incorrect move. Conflicts: ${this.conflicts}`);
+        }
+        
+        // Create event detail
         const eventDetail = { 
             row, 
             col, 
             number: value, 
-            isValid: isValid,
+            isValid: isCorrect,
             oldNumber: oldValue 
         };
         
         console.log('Dispatching numberPlaced event with detail:', eventDetail);
         
         // Dispatch numberPlaced event
-        const event = new CustomEvent('numberPlaced', { detail: eventDetail });
-        this.dispatchEvent(event);
+        this.dispatchEvent('numberPlaced', eventDetail);
+        
+        // Check for puzzle completion
+        if (this.checkWinCondition()) {
+            console.log('Puzzle completed!');
+            this.dispatchEvent('puzzleCompleted', {
+                moveCount: this.moveCount,
+                conflicts: this.conflicts
+            });
+        }
         
         return true;
     }
@@ -563,19 +569,19 @@ export default class SudokuGame {
     }
     
     // Add getter method
-    getBombs() {
-      return this.bombs;
+    getConflicts() {
+      return this.conflicts;
     }
 
-    // Add method to increment bombs
-    addBomb() {
-      this.bombs++;
-      return this.bombs >= this.maxBombs; // Return true if game over
+    // Add method to increment conflicts
+    addConflict() {
+      this.conflicts++;
+      return this.conflicts >= this.maxConflicts; // Return true if game over
     }
 
-    // Add method to reset bombs
-    resetBombs() {
-      this.bombs = 0;
+    // Add method to reset conflicts
+    resetConflicts() {
+      this.conflicts = 0;
     }
 
     /**

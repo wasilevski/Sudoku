@@ -1,16 +1,20 @@
+import puzzles from './puzzle-data.js';
+
 /**
  * SudokuController class
  * Manages user interactions and game flow
  */
-class SudokuController {
+export default class SudokuController {
     /**
      * Create a new Sudoku controller
      * @param {SudokuGame} game - The Sudoku game instance
      * @param {SudokuBoardRenderer} boardRenderer - The Sudoku board renderer
+     * @param {HomeScreen} homeScreen - The HomeScreen instance
      */
-    constructor(game, boardRenderer) {
+    constructor(game, boardRenderer, homeScreen) {
       this.game = game;
       this.boardRenderer = boardRenderer;
+      this.homeScreen = homeScreen;
       this.isNoteMode = false;
       this.timer = null;
       this.secondsElapsed = 0;
@@ -24,6 +28,16 @@ class SudokuController {
       this.remainingConflicts = 0; // Track remaining conflicts
       this.gameOverPopup = document.createElement('div');
       this.setupGameOverPopup();
+      
+      // Initialize game state
+      const currentPuzzle = puzzles[this.game.currentPuzzleId - 1];
+      if (currentPuzzle) {
+          this.remainingMoves = currentPuzzle.goalMoves;
+          this.remainingConflicts = currentPuzzle.goalConflicts;
+      } else {
+          this.remainingMoves = 0;
+          this.remainingConflicts = 0;
+      }
       
       this.setupEventListeners();
       this.startTimer();
@@ -55,7 +69,24 @@ class SudokuController {
       // Add next puzzle button listener
       if (this.nextPuzzleBtn) {
           this.nextPuzzleBtn.addEventListener('click', () => {
-              this.loadNextPuzzle();
+              this.winPopup.classList.add('hidden');
+              const hasNextPuzzle = this.homeScreen.progressToNextPuzzle();
+              if (hasNextPuzzle) {
+                  // Hide game screen and show home screen
+                  document.getElementById('game-screen').classList.add('hidden');
+                  this.homeScreen.show();
+                  
+                  // Reset game state
+                  this.selectedCell = null;
+                  this.boardRenderer.clearSelection();
+                  this.resetTimer();
+                  
+                  // Update button states
+                  this.updateNumberButtonStates();
+              } else {
+                  // Handle game completion (all puzzles solved)
+                  alert('Congratulations! You have completed all puzzles!');
+              }
           });
       }
     }
@@ -261,11 +292,15 @@ class SudokuController {
         this.boardRenderer.renderBoard();
         this.updateMoveCounter();
         
-        // First check if the puzzle is complete (win condition)
-        if (this.game.isComplete()) {
-            this.handleGameComplete();
+        // Only check for win condition if:
+        // 1. We're not clearing a cell
+        // 2. The move is correct according to the solution
+        // 3. There are no conflicts
+        if (!isClearingCell && this.game.isCorrectMove(row, col, num) && allConflicts.length === 0) {
+            // Check if the entire puzzle is complete
+            this.checkWinCondition();
         }
-        // Only check for game over if the puzzle is not complete
+        // Check for game over condition
         else if (this.remainingMoves <= 0 || this.remainingConflicts <= 0) {
             this.handleGameOver();
         }
@@ -439,12 +474,22 @@ class SudokuController {
     }
 
     loadPuzzle(puzzleId) {
+        console.log('Loading puzzle:', puzzleId);
+        
+        // Hide win popup if it exists
+        if (this.winPopup) {
+            console.log('Hiding win popup');
+            this.winPopup.classList.add('hidden');
+        }
+        
         if (this.game.loadPredefinedPuzzle(puzzleId)) {
             // Reset counters based on puzzle goals
-            const puzzle = PREDEFINED_PUZZLES[puzzleId];
+            const puzzle = puzzles[puzzleId - 1];
             this.remainingMoves = puzzle.goalMoves;
             this.remainingConflicts = puzzle.goalConflicts;
             
+            // Recreate the canvas and render the board
+            this.boardRenderer.createCanvas();
             this.boardRenderer.renderBoard();
             this.resetTimer();
             
@@ -462,6 +507,11 @@ class SudokuController {
 
             // Update counters display immediately
             this.updateMoveCounter();
+            
+            // Clear board selection
+            if (this.boardRenderer.clearSelection) {
+                this.boardRenderer.clearSelection();
+            }
         }
     }
 
@@ -473,7 +523,7 @@ class SudokuController {
         console.log('Attempting to load puzzle ID:', nextId);
         
         // Check if next puzzle exists
-        if (PREDEFINED_PUZZLES[nextId]) {
+        if (puzzles[nextId - 1]) {
             console.log('Found next puzzle, loading puzzle:', nextId);
             this.winPopup.classList.add('hidden');
             this.loadPuzzle(nextId.toString());
@@ -625,5 +675,68 @@ class SudokuController {
     handleGameOver() {
         this.pauseTimer();
         this.gameOverPopup.classList.remove('hidden');
+    }
+
+    checkWinCondition() {
+        // Get the current puzzle
+        const puzzle = puzzles[this.game.currentPuzzleId - 1];
+        if (!puzzle || !puzzle.solution) {
+            console.error('No solution available for current puzzle');
+            return;
+        }
+
+        // Check if the current grid matches the solution
+        let isComplete = true;
+        let hasEmptyCells = false;
+
+        // First check for empty cells
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                if (this.game.grid[row][col] === 0) {
+                    console.log(`Empty cell found at ${row},${col}`);
+                    hasEmptyCells = true;
+                    isComplete = false;
+                    break;
+                }
+            }
+            if (hasEmptyCells) break;
+        }
+
+        // If no empty cells, check against solution
+        if (!hasEmptyCells) {
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (this.game.grid[row][col] !== puzzle.solution[row][col]) {
+                        console.log(`Mismatch at ${row},${col}: expected ${puzzle.solution[row][col]}, got ${this.game.grid[row][col]}`);
+                        isComplete = false;
+                        break;
+                    }
+                }
+                if (!isComplete) break;
+            }
+        }
+
+        // Check for conflicts
+        const conflicts = this.getAllConflicts();
+        console.log('Current conflicts:', conflicts);
+
+        // Only show win popup if:
+        // 1. The puzzle is complete (matches solution)
+        // 2. There are no empty cells
+        // 3. There are no conflicts
+        if (isComplete && !hasEmptyCells && conflicts.length === 0) {
+            console.log('All win conditions met:');
+            console.log('- Grid matches solution');
+            console.log('- No empty cells');
+            console.log('- No conflicts');
+            if (this.winPopup) {
+                this.winPopup.classList.remove('hidden');
+            }
+        } else {
+            console.log('Win conditions not met:');
+            console.log('- Complete:', isComplete);
+            console.log('- Empty cells:', hasEmptyCells);
+            console.log('- Conflicts:', conflicts.length);
+        }
     }
 }

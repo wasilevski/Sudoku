@@ -1,8 +1,10 @@
+import puzzles from './puzzle-data.js';
+
 /**
  * SudokuGame class
  * Manages the state and rules of a Sudoku puzzle
  */
-class SudokuGame {
+export default class SudokuGame {
     /**
      * Create a new Sudoku game
      * @param {string} difficulty - The difficulty level ('easy', 'medium', 'hard', 'expert')
@@ -17,12 +19,12 @@ class SudokuGame {
         this.moveCount = 0;
         this.bombs = 0;
         this.maxBombs = 3; // Game over at 3 bombs
-        this.currentPuzzleId = null;
+        this.currentPuzzleId = 1;
         this.numberCounts = new Array(10).fill(0); // Index 0 won't be used
         this.eventListeners = new Map(); // Add event system
         
-        // Generate initial puzzle
-        this.generatePuzzle();
+        // Load first puzzle instead of generating
+        this.loadPredefinedPuzzle(1);
     }
     
     /**
@@ -146,7 +148,7 @@ class SudokuGame {
      * @returns {boolean} True if the move matches the solution
      */
     isCorrectMove(row, col, value) {
-        const puzzle = PREDEFINED_PUZZLES[this.currentPuzzleId];
+        const puzzle = puzzles[this.currentPuzzleId - 1];
         if (!puzzle || !puzzle.solution) {
             console.error('No solution available for current puzzle');
             return false;
@@ -160,7 +162,7 @@ class SudokuGame {
      */
     findIncorrectCells() {
         const conflicts = [];
-        const puzzle = PREDEFINED_PUZZLES[this.currentPuzzleId];
+        const puzzle = puzzles[this.currentPuzzleId - 1];
         
         if (!puzzle || !puzzle.solution) {
             console.error('No solution available for current puzzle');
@@ -645,7 +647,7 @@ class SudokuGame {
 
     // Add new method to load predefined puzzle
     loadPredefinedPuzzle(puzzleId) {
-        const puzzle = PREDEFINED_PUZZLES[puzzleId];
+        const puzzle = puzzles[puzzleId - 1];
         if (!puzzle) return false;
 
         this.grid = JSON.parse(JSON.stringify(puzzle.grid));
@@ -660,7 +662,8 @@ class SudokuGame {
         this.initializeNumberCounts();
         
         // Emit puzzleLoaded event
-        this.dispatchEvent('puzzleLoaded', { puzzleId });
+        const event = new CustomEvent('puzzleLoaded', { detail: { puzzleId } });
+        this.dispatchEvent(event);
         
         return true;
     }

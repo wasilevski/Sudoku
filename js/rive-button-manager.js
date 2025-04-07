@@ -1,4 +1,4 @@
-class RiveButtonManager {
+export default class RiveButtonManager {
     constructor(game, controller) {
         this.game = game;
         this.controller = controller;

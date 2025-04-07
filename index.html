@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sudoku Game</title>
+  <title>Sudoku 3D</title>
   <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/game.css">
   <link rel="stylesheet" href="css/board-elements.css">
   <link rel="stylesheet" href="css/interface-elements.css">
   <link rel="stylesheet" href="css/buttons.css">
@@ -14,45 +16,58 @@
   <script src="https://unpkg.com/@rive-app/canvas@2.7.0"></script>
 </head>
 <body>
-  <div class="game-container">
-    <div class="headboard-container">
-      <canvas id="headboard-canvas"></canvas>
-    </div>
-    
-    <div class="board-container">
-      <div id="sudoku-board-container"></div>
-    </div>
-    
-    <div class="controls">
-      <div class="number-input">
-        <div class="rive-button" data-number="1"></div>
-        <div class="rive-button" data-number="2"></div>
-        <div class="rive-button" data-number="3"></div>
-        <div class="rive-button" data-number="4"></div>
-        <div class="rive-button" data-number="5"></div>
-        <div class="rive-button" data-number="6"></div>
-        <div class="rive-button" data-number="7"></div>
-        <div class="rive-button" data-number="8"></div>
-        <div class="rive-button" data-number="9"></div>
-      </div>
-  </div>
-  
-  <div id="win-popup" class="popup hidden">
-    <div class="popup-content">
-      <h2>Congratulations!</h2>
-      <p>You solved the puzzle!</p>
-      <div class="popup-actions">
-        <button id="next-puzzle-btn">Next Puzzle</button>
-      </div>
+  <!-- Home Screen -->
+  <div id="home-screen" class="screen">
+    <div class="home-content">
+      <h2 id="puzzle-number" class="puzzle-number"></h2>
+      <h1 id="puzzle-name" class="puzzle-title"></h1>
+      <button id="play-button" class="cta-button">Play</button>
     </div>
   </div>
+
+  <!-- Game Screen -->
+  <div id="game-screen" class="screen hidden">
+    <div class="game-container">
+      <div class="headboard-container">
+        <canvas id="headboard-canvas"></canvas>
+      </div>
+      
+      <div class="board-container">
+        <div id="sudoku-board-container"></div>
+      </div>
+      
+      <div class="controls">
+        <div class="number-input">
+          <div class="rive-button" data-number="1"></div>
+          <div class="rive-button" data-number="2"></div>
+          <div class="rive-button" data-number="3"></div>
+          <div class="rive-button" data-number="4"></div>
+          <div class="rive-button" data-number="5"></div>
+          <div class="rive-button" data-number="6"></div>
+          <div class="rive-button" data-number="7"></div>
+          <div class="rive-button" data-number="8"></div>
+          <div class="rive-button" data-number="9"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="win-popup" class="popup hidden">
+      <div class="popup-content">
+        <h2>Congratulations!</h2>
+        <p>You solved the puzzle!</p>
+        <div class="popup-actions">
+          <button id="next-puzzle-btn">Next Puzzle</button>
+        </div>
+      </div>
+    </div>
+  </div>
   
-  <script src="js/puzzle-data.js"></script>
-  <script src="js/sudoku-game.js"></script>
-  <script src="js/sudoku-board-renderer.js"></script>
-  <script src="js/sudoku-controller.js"></script>
-  <script src="js/rive-button-manager.js"></script>
-  <script src="js/rive-headboard-manager.js"></script>
-  <script src="js/app.js"></script>
+  <script type="module" src="js/puzzle-data.js"></script>
+  <script type="module" src="js/sudoku-game.js"></script>
+  <script type="module" src="js/sudoku-board-renderer.js"></script>
+  <script type="module" src="js/sudoku-controller.js"></script>
+  <script type="module" src="js/rive-button-manager.js"></script>
+  <script type="module" src="js/rive-headboard-manager.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

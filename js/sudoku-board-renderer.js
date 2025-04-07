@@ -2,7 +2,7 @@
  * SudokuBoardRenderer class
  * Handles the canvas-based rendering of the Sudoku board
  */
-class SudokuBoardRenderer {
+export default class SudokuBoardRenderer {
   /**
    * Create a new Sudoku controller
    * @param {HTMLElement} container - The container element for the canvas
@@ -13,41 +13,11 @@ class SudokuBoardRenderer {
     this.game = game;
     this.selectedCell = null;
     this.conflicts = [];
-    
-    // Create canvas
-    this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d');
-    
-    // Get the device pixel ratio
+    this.displaySize = 349;  // This matches our CSS
     this.dpr = window.devicePixelRatio || 1;
     
-    // Set fixed display size
-    this.displaySize = 349;  // This matches our CSS
-    
-    // Set the display size (css pixels)
-    this.canvas.style.width = `${this.displaySize}px`;
-    this.canvas.style.height = `${this.displaySize}px`;
-    
-    // Set actual size in memory (scaled for device pixel ratio)
-    this.canvas.width = this.displaySize * this.dpr;
-    this.canvas.height = this.displaySize * this.dpr;
-    
-    // Scale all drawing operations by the dpr
-    this.ctx.scale(this.dpr, this.dpr);
-    
-    this.container.appendChild(this.canvas);
-    
-    // Add click event listener to the canvas
-    this.canvas.addEventListener('click', (e) => {
-      const rect = this.canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) * this.dpr);
-      const y = ((e.clientY - rect.top) * this.dpr);
-      
-      const cell = this.getCellFromCoordinates(x, y);
-      if (cell) {
-        this.selectCell(cell.row, cell.col);
-      }
-    });
+    // Create initial canvas
+    this.createCanvas();
     
     // Listen for puzzle loaded event
     this.game.addEventListener('puzzleLoaded', () => {
@@ -67,6 +37,42 @@ class SudokuBoardRenderer {
     this.BG_ROW_COL = styles.getPropertyValue('--bg-row-col').trim();
     this.BG_INITIAL = styles.getPropertyValue('--bg-initial').trim();
     this.BG_NORMAL = styles.getPropertyValue('--bg-normal').trim();
+  }
+  
+  /**
+   * Create or recreate the canvas element
+   */
+  createCanvas() {
+    // Create canvas
+    this.canvas = document.createElement('canvas');
+    this.ctx = this.canvas.getContext('2d');
+    
+    // Set the display size (css pixels)
+    this.canvas.style.width = `${this.displaySize}px`;
+    this.canvas.style.height = `${this.displaySize}px`;
+    
+    // Set actual size in memory (scaled for device pixel ratio)
+    this.canvas.width = this.displaySize * this.dpr;
+    this.canvas.height = this.displaySize * this.dpr;
+    
+    // Scale all drawing operations by the dpr
+    this.ctx.scale(this.dpr, this.dpr);
+    
+    // Add click event listener to the canvas
+    this.canvas.addEventListener('click', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) * this.dpr);
+      const y = ((e.clientY - rect.top) * this.dpr);
+      
+      const cell = this.getCellFromCoordinates(x, y);
+      if (cell) {
+        this.selectCell(cell.row, cell.col);
+      }
+    });
+    
+    // Clear container and append new canvas
+    this.container.innerHTML = '';
+    this.container.appendChild(this.canvas);
   }
   
   /**

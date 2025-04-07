@@ -1,41 +1,59 @@
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        console.log('Initializing game...');
+import SudokuGame from './sudoku-game.js';
+import SudokuBoardRenderer from './sudoku-board-renderer.js';
+import SudokuController from './sudoku-controller.js';
+import RiveButtonManager from './rive-button-manager.js';
+import RiveHeadboardManager from './rive-headboard-manager.js';
+import HomeScreen from './home-screen.js';
+
+export default class App {
+    constructor() {
+        this.homeScreen = null;
+        this.game = null;
+        this.boardRenderer = null;
+        this.controller = null;
+        this.initialize();
+    }
+
+    initialize() {
+        // Initialize home screen first
+        this.homeScreen = new HomeScreen();
         
-        // Get the container
-        const container = document.getElementById('sudoku-board-container');
-        if (!container) {
-            throw new Error('Could not find sudoku-board-container');
-        }
+        // Initialize game components but keep them hidden
+        this.initializeGameComponents();
+        
+        // Listen for play button click
+        this.homeScreen.onPlay((puzzleId) => {
+            this.startGame(puzzleId);
+        });
+    }
+
+    initializeGameComponents() {
+        const gameScreen = document.getElementById('game-screen');
         
         // Initialize game components
-        const game = new SudokuGame();
-        const renderer = new SudokuBoardRenderer(container, game);
+        this.game = new SudokuGame();
+        this.boardRenderer = new SudokuBoardRenderer(document.getElementById('sudoku-board-container'), this.game);
+        this.controller = new SudokuController(this.game, this.boardRenderer, this.homeScreen);
         
-        // Ensure canvas is created before initializing controller
-        if (!renderer.canvas) {
-            throw new Error('Canvas was not properly initialized');
-        }
+        // Initialize Rive managers with proper dependencies
+        this.riveButtonManager = new RiveButtonManager(this.game, this.controller);
+        this.riveHeadboardManager = new RiveHeadboardManager(this.game);
         
-        // Initialize controller
-        const controller = new SudokuController(game, renderer);
-        
-        // Initialize Rive managers and connect them to the controller
-        const riveButtonManager = new RiveButtonManager(game, controller);
-        const headboardManager = new RiveHeadboardManager(game);
-        controller.setRiveButtonManager(riveButtonManager);
-        controller.setRiveHeadboardManager(headboardManager);
-        
-        // Load initial puzzle
-        const defaultPuzzleId = '1';
-        controller.loadPuzzle(defaultPuzzleId);
-        
-        // Initial render
-        renderer.renderBoard();
-        
-        console.log('Game initialized successfully');
-    } catch (error) {
-        console.error('Error initializing game:', error);
+        // Set Rive managers in controller using individual setters
+        this.controller.setRiveButtonManager(this.riveButtonManager);
+        this.controller.setRiveHeadboardManager(this.riveHeadboardManager);
     }
+
+    startGame(puzzleId) {
+        // Show game screen and load puzzle
+        const gameScreen = document.getElementById('game-screen');
+        gameScreen.classList.remove('hidden');
+        this.controller.loadPuzzle(puzzleId);
+    }
+}
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new App();
+    app.initialize();
 });

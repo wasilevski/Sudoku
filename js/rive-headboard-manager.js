@@ -1,4 +1,6 @@
-class RiveHeadboardManager {
+import puzzles from './puzzle-data.js';
+
+export default class RiveHeadboardManager {
     constructor(game) {
         this.game = game;
         
@@ -132,17 +134,11 @@ class RiveHeadboardManager {
                         console.warn('Could not set initial state - Normal trigger not found');
                     }
 
-                    // Get initial values from the current puzzle
-                    const currentPuzzle = PREDEFINED_PUZZLES[this.game.currentPuzzleId];
-                    if (currentPuzzle) {
-                        // Update text fields with initial values
-                        this.updateTextFields({
-                            moves: currentPuzzle.goalMoves,
-                            conflicts: currentPuzzle.goalConflicts
-                        });
-                    } else {
-                        console.warn('No current puzzle found for initial values');
-                    }
+                    // Set initial text values
+                    this.updateTextFields({
+                        moves: this.game.moveCount,
+                        conflicts: this.game.bombs
+                    });
                 }
             });
         } catch (error) {
@@ -154,6 +150,12 @@ class RiveHeadboardManager {
         // Listen for number placements
         this.game.addEventListener('numberPlaced', (event) => {
             console.log('Number placed event:', event);
+            
+            // Update text fields with current values
+            this.updateTextFields({
+                moves: this.game.moveCount,
+                conflicts: this.game.bombs
+            });
             
             if (event.detail.isValid) {
                 console.log('Valid move detected, attempting to fire happy trigger');
@@ -238,37 +240,33 @@ class RiveHeadboardManager {
         });
     }
 
-    updateTextFields(data) {
+    updateTextFields({ moves, conflicts }) {
         if (!this.rive) {
-            console.log('Rive not ready');
+            console.warn('Rive not initialized, cannot update text fields');
             return;
         }
 
         try {
-            // Update conflicts counter
-            const conflicts = data ? data.conflicts.toString() : '0';
-            console.log('Setting TextBox1 value to:', conflicts);
-            this.rive.setTextRunValue('TextBox1', conflicts);
-            
-            // Verify text was set
-            try {
-                const verifyText1 = this.rive.getTextRunValue('TextBox1');
-                console.log('Verified TextBox1 value is now:', verifyText1);
-            } catch (e) {
-                console.error('Error verifying TextBox1 value:', e.message);
-            }
-            
             // Update moves counter
-            const moves = data ? data.moves.toString() : '0';
-            console.log('Setting TextBox2 value to:', moves);
-            this.rive.setTextRunValue('TextBox2', moves);
+            const movesText = moves.toString();
+            console.log('Setting moves text to:', movesText);
+            this.rive.setTextRunValue('TextBox2', movesText);
+            
+            // Update conflicts counter
+            const conflictsText = conflicts.toString();
+            console.log('Setting conflicts text to:', conflictsText);
+            this.rive.setTextRunValue('TextBox1', conflictsText);
             
             // Verify text was set
             try {
-                const verifyText2 = this.rive.getTextRunValue('TextBox2');
-                console.log('Verified TextBox2 value is now:', verifyText2);
+                const verifyMoves = this.rive.getTextRunValue('TextBox2');
+                const verifyConflicts = this.rive.getTextRunValue('TextBox1');
+                console.log('Verified text values:', {
+                    moves: verifyMoves,
+                    conflicts: verifyConflicts
+                });
             } catch (e) {
-                console.error('Error verifying TextBox2 value:', e.message);
+                console.error('Error verifying text values:', e.message);
             }
         } catch (error) {
             console.error('Error updating text fields:', error);

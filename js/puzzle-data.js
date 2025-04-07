@@ -1,5 +1,6 @@
-const PREDEFINED_PUZZLES = {
-    1: {
+export default [
+    {
+        puzzleNumber: 1,
         name: "Baby Steps",
         goalConflicts: 3,
         goalMoves: 6,
@@ -27,7 +28,8 @@ const PREDEFINED_PUZZLES = {
         ]
     },
 
-    2: {
+    {
+        puzzleNumber: 2,
         name: "Lonely Islands",
         goalConflicts: 3,
         goalMoves: 6,
@@ -55,7 +57,8 @@ const PREDEFINED_PUZZLES = {
         ]
     },
 
-    3: {
+    {
+        puzzleNumber: 3,
         name: "Empty Middle Square",
         goalConflicts: 5,
         goalMoves: 20,
@@ -83,7 +86,8 @@ const PREDEFINED_PUZZLES = {
         ]
     },
 
-    4: {
+    {
+        puzzleNumber: 4,
         name: "Lonely Islands",
         goalConflicts: 6,
         goalMoves: 20,
@@ -111,7 +115,8 @@ const PREDEFINED_PUZZLES = {
         ]
     },
     
-    5: {
+    {
+        puzzleNumber: 5,
         name: "Lonely Islands",
         goalConflicts: 5,
         goalMoves: 20,
@@ -139,7 +144,8 @@ const PREDEFINED_PUZZLES = {
         ]
     },
 
-    6: {
+    {
+        puzzleNumber: 6,
         name: "Three Empty Rows",
         goalConflicts: 10,
         goalMoves: 30,
@@ -169,4 +175,4 @@ const PREDEFINED_PUZZLES = {
 
 
     // Add puzzle 3 similarly
-};
+];
